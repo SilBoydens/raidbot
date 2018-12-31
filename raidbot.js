@@ -131,7 +131,7 @@ function settings(msg) {
     case 'add':
       value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]];
       if (!Array.isArray(value)) {msg.reply('not a list, pls use \'set\''); return;}
-      config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]].push(msg.content.split(' ')[5]);
+      config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]].push(msg.content.split(' ')[5].match(/\d/g).join(''));
       response = `the the new value(s) for ${msg.content.split(' ')[4]} in module ${msg.content.split(' ')[3]} is/are:\n - `;
       value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]].join('\n - ');
       msg.reply(response + value);
@@ -139,8 +139,8 @@ function settings(msg) {
     case 'remove':
       value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]];
       if (!Array.isArray(value)) {msg.reply('not a list, pls use \'set\''); return;}
-      if (arr.indexOf(msg.content.split(' ')[5])) {
-        arr.splice(arr.indexOf(msg.content.split(' ')[5]), 1);
+      if (arr.indexOf(msg.content.split(' ')[5].match(/\d/g).join(''))) {
+        arr.splice(arr.indexOf(msg.content.split(' ')[5].match(/\d/g).join('')), 1);
         response = `the the new value(s) for ${msg.content.split(' ')[4]} in module ${msg.content.split(' ')[3]} is/are:\n - `;
       } else {
         response = `i did not find that :cry:\nthe the value(s) for ${msg.content.split(' ')[4]} in module ${msg.content.split(' ')[3]} is/are:\n - `;

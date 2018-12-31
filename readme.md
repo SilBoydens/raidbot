@@ -47,4 +47,3 @@ config input validation
 config add list of users who should get dm's on command usage  
 split in even more files  
 website for config? (maybe)  
-make code public (this is going to be fun)  
