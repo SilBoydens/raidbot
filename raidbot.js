@@ -317,7 +317,7 @@ client.on('message', msg => {
     }
   } else { // in DM
     if (msg.author.bot) return; //this stops sending the help message when the bot says something
-    var DMcommand = msg.content.split(' ')[1];
+    var DMcommand = msg.content.split(' ')[0];
     if (DMcommands.hasOwnProperty(DMcommand)) {
       DMcommands[DMcommand](msg);
       msg.channel.send('want help? send anything in here that is not a command');
