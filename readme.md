@@ -12,7 +12,16 @@ https://www.paypal.me/silboydens
 **contact me:**  
 i'm `@Sil#5262` on discord and i can usually be found in the MEE6 bot support server (discord.gg/mee6)
 
-# commands
+# commands for dm
+commands in dm have no prefix, just send the command
+
+## changelog
+sending `changelog` in a dm to the bot will let you opt-in or opt-out of receving updates
+
+## help
+send anything that the bot does not understand as a command and it will give you the help message.... link to this
+
+# commands for guilds
 
 all commands start with `@raidbot#0165` (or when selfhosting, with the bots name)  
 `@raidbot#0165 command arguments`

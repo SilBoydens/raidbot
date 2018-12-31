@@ -322,7 +322,7 @@ client.on('message', msg => {
       DMcommands[DMcommand](msg);
       msg.channel.send('want help? send anything in here that is not a command');
     } else {
-      msg.channel.send(':eyes: you seems to be needing some help\nhttps://github.com/SilBoydens/raidbot/readme.md');
+      msg.channel.send(':eyes: you seems to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md');
     }
   }
 });
