@@ -1,0 +1,9 @@
+{
+  "raid": {
+    "lookback": "5",
+    "allowed_roles": []
+  },
+  "lockdown": {
+    "allowed_roles": []
+  }
+}

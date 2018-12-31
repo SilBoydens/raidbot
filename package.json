@@ -1,0 +1,29 @@
+{
+  "name": "raidbot",
+  "version": "1.0.0",
+  "description": "a discord bot to stop and cleanup raids",
+  "main": "raidbot.js",
+  "scripts": {
+    "test": "node raidbot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SilBoydens/raidbot.git"
+  },
+  "keywords": [
+    "discord",
+    "raid",
+    "bot"
+  ],
+  "author": "Sil Boydens",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/SilBoydens/raidbot/issues"
+  },
+  "homepage": "https://github.com/SilBoydens/raidbot#readme",
+  "dependencies": {
+    "discord.js": "^11.4.2",
+    "dotenv": "^6.2.0",
+    "sqlite3": "^4.0.4"
+  }
+}
