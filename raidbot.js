@@ -196,15 +196,9 @@ var DMcommands = { changelog: changelog };
 /* ###### OTHERS ###### */
 
 function log(msg) {
-  try {
-    var stmt = db.prepare(`INSERT INTO g${msg.guild.id} VALUES (?, ?, ?, ?)`);
-    stmt.run(msg.author.id, msg.author.username, msg.content, new Date());
-  } catch (error) {
-    createTable(msg.guild.id);
-    // i don't make a table when you invite the bot
-    // this should catch that and miss the first message
-    // but raidbots keep spamming so it's fine  
-  }
+  if (!guilds.includes(msg.guild.id)) createTable(msg.guild.id);
+  var stmt = db.prepare(`INSERT INTO g${msg.guild.id} VALUES (?, ?, ?, ?)`);
+  stmt.run(msg.author.id, msg.author.username, msg.content, new Date());
 }
 
 function isAllowed(msg, command) {
