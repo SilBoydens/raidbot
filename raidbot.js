@@ -284,7 +284,7 @@ client.on('ready', () => {
   // i don't care about old messages as i use the sqlite to keep track
   // because of low ram on the vps, every minute, clear all messages older then a minute
   setInterval(() => {
-    client.sweepMessages(60000);
+    client.sweepMessages(60);
   }, 60000);
   console.log(`Logged in as ${client.user.tag}!`);
   console.log(`serving ${client.guilds.size} guilds:`);
