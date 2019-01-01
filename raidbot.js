@@ -41,24 +41,23 @@ function raid(msg) {
       msg.reply('[raid]invalid\n either use a username or a message:\n`@server raid user username\n@server raid message messagecontent`');
       return;
     }
-    console.log(sql);
     db.all(sql, function(err,rows) {
-      console.log(rows);
       if (rows.length) {
         rows.forEach(row => {
           message = message + "\n" + row.userid;
         });
+        logcommands(message + "```");
         msg.reply(message + "```\nif you think these are all raidbots, pls report them to discord on (<https://http//dis.gd/contact> => trust and safety => type: raiding) or directly to a discord trust and safety member");
         rows.forEach(row => {
           try {
             if (zombie) {
-              console.log(`ban from ${msg.guild.id}: $row.userid`);
+              console.log(`ban from ${msg.guild.id}: ${row.userid}`);
             } else {
               msg.guild.member(row.userid).ban({reason: 'raid', days: 7});
             }
           } catch (error) {
             console.error(error);
-            // ban failed                    
+            // ban failed
           }
         });
       } else {
@@ -105,59 +104,59 @@ function lockdown(msg) {
 }
 
 function settings(msg) {
+  var [action, module, option, val] = msg.content.split(' ').slice(2, 6);
   createconfig(msg.guild.id);
-  // TODO implement
-  if (!config[msg.guild.id][msg.content.split(' ')[3]]) {
-    msg.reply(`invallid module name ${msg.content.split(' ')[3]}\n`+
+  if (!config[msg.guild.id][module]) {
+    msg.reply(`invallid module name ${module}\n`+
       `the following modules exist:\n`+
       ` - ${Object.keys(config[msg.guild.id]).join('\n - ')}`);
     return;
   }
-  if (!config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]]) {
-    console.log(config[msg.guild.id][msg.content.split(' ')[3]]);
-    msg.reply(`invallid setting ${msg.content.split(' ')[4]} for module ${msg.content.split(' ')[3]}\n`+
-      `the following settings exist:\n`+
-      ` - ${Object.keys(config[msg.guild.id][msg.content.split(' ')[3]]).join('\n - ')}`);
+  if (!config[msg.guild.id][module][option]) {
+    console.log(config[msg.guild.id][option]);
+    msg.reply(`invallid option ${option} for module ${module}\n`+
+      `the following options exist:\n`+
+      ` - ${Object.keys(config[msg.guild.id][module]).join('\n - ')}`);
     return;
   }
   var response, value = '';
-  switch(msg.content.split(' ')[2]) {
+  switch(action) {
     case 'list':
-      response = `the value(s) for ${msg.content.split(' ')[4]} in module ${msg.content.split(' ')[3]} is/are:\n - `;
-      value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]];
+      response = `the value(s) for ${option} in module ${module} is/are:\n - `;
+      value = config[msg.guild.id][module][option];
       if (Array.isArray(value)) value = value.join('\n - ');
       msg.reply(response + value);
       break;
     case 'add':
-      value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]];
+      value = config[msg.guild.id][module][option];
       if (!Array.isArray(value)) {msg.reply('not a list, pls use \'set\''); return;}
-      config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]].push(msg.content.split(' ')[5].match(/\d/g).join(''));
-      response = `the the new value(s) for ${msg.content.split(' ')[4]} in module ${msg.content.split(' ')[3]} is/are:\n - `;
-      value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]].join('\n - ');
+      config[msg.guild.id][module][option].push(val.match(/\d/g).join(''));
+      response = `the the new value(s) for ${option} in module ${module} is/are:\n - `;
+      value = config[msg.guild.id][module][option].join('\n - ');
       msg.reply(response + value);
       break;
     case 'remove':
-      value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]];
+      value = config[msg.guild.id][module][option];
       if (!Array.isArray(value)) {msg.reply('not a list, pls use \'set\''); return;}
-      if (arr.indexOf(msg.content.split(' ')[5].match(/\d/g).join(''))) {
-        arr.splice(arr.indexOf(msg.content.split(' ')[5].match(/\d/g).join('')), 1);
-        response = `the the new value(s) for ${msg.content.split(' ')[4]} in module ${msg.content.split(' ')[3]} is/are:\n - `;
+      if (arr.indexOf(val.match(/\d/g).join(''))) {
+        arr.splice(arr.indexOf(val.match(/\d/g).join('')), 1);
+        response = `the the new value(s) for ${option} in module ${module} is/are:\n - `;
       } else {
-        response = `i did not find that :cry:\nthe the value(s) for ${msg.content.split(' ')[4]} in module ${msg.content.split(' ')[3]} is/are:\n - `;
+        response = `i did not find that :cry:\nthe the value(s) for ${option} in module ${module} is/are:\n - `;
       }
-      value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]].join('\n - ');
+      value = config[msg.guild.id][module][option].join('\n - ');
       msg.reply(response + value);
       break;
     case 'set':
-      value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]];
+      value = config[msg.guild.id][module][option];
       if (Array.isArray(value)) {msg.reply('this is a list, pls use \'add\' and \'remove\''); return;}
-      config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]] = msg.content.split(' ')[5];
-      response = `the the new value for ${msg.content.split(' ')[4]} in module ${msg.content.split(' ')[3]} is: `;
-      value = config[msg.guild.id][msg.content.split(' ')[3]][msg.content.split(' ')[4]];
+      config[msg.guild.id][module][option] = val;
+      response = `the the new value for ${option} in module ${module} is: `;
+      value = config[msg.guild.id][module][option];
       msg.reply(response + value);
       break;
     default:
-      msg.reply(`i wasn't able to understand ${msg.content.split(' ')[2]}, try using:
+      msg.reply(`i wasn't able to understand ${action}, try using:
        - list (works for everything)
        - add (for lists)
        - remove (for lists)
@@ -267,9 +266,22 @@ function senderrors(msg, e) {
   });
 }
 
-/* ###### client ###### */
+function logcommands(msg) {
+  if (process.env.LOGCHANNEL) {
+    client.channels.get(process.env.LOGCHANNEL).send(
+      msg.content ? `[${msg.guild.id}] <@${msg.author.id}> (${msg.author.id}) used command\n${msg.content.slice(22)}` : msg
+    );
+  }
+}
+
+/* ###### CLIENT ###### */
 
 client.on('ready', () => {
+  // i don't care about old messages as i use the sqlite to keep track
+  // because of low ram on the vps, every minute, clear all messages older then a minute
+  setInterval(() => {
+    client.sweepMessages(60000);
+  }, 60000);
   console.log(`Logged in as ${client.user.tag}!`);
   console.log(`serving ${client.guilds.size} guilds:`);
   client.guilds.forEach(guild => {
@@ -298,6 +310,7 @@ client.on('message', msg => {
   if (msg.guild) { // in a guild
     log(msg);
     if(msg.content.startsWith(`<@${client.user.id}> `)) {
+      logcommands(msg);
       var command = msg.content.split(' ')[1];
       if (commands.hasOwnProperty(command) && isAllowed(msg, command)) {
         try {

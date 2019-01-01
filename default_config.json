@@ -1,6 +1,7 @@
 {
   "raid": {
     "lookback": "5",
+    "id_list": true,
     "allowed_roles": []
   },
   "lockdown": {

@@ -56,3 +56,40 @@ config input validation
 config add list of users who should get dm's on command usage  
 split in even more files  
 website for config? (maybe)  
+
+# selfhosting
+
+## setup
+run the commands:
+```bash
+git clone git@github.com:SilBoydens/raidbot.git
+cd raidbot
+npm i
+```
+
+copy `raidbot_default.json` to `raidbot.json` and fill in your userID  
+copy `example.env` to `.env` and fill in the needed values  
+for `DB_file` i would recomend using a ramdisk as there is no need to write this to the disk, if you want to use a ramdisk, read ## ramdisk
+
+## running the bot
+just run
+```bash
+node ./raidbot.js
+```
+there is no need to set up databases or anything else
+
+
+## ramdisk
+a ramdisk is a part of your ram that get's dedicated as a virtual disk, this reads and writes really fast but is volitile, meaning on a blackout you lose the content.
+
+execute these commands (you can change /ram)
+```bash
+sudo mkdir -p /ram
+sudo mount -t tmpfs -o size=2048M tmpfs /ram
+```
+
+and add this at the end of `/etc/fstab`
+```
+none /ram tmpfs nodev,nosuid,noexec,nodiratime,size=2048M 0 0
+```
+and now you have a ramdisk at `/ram`
