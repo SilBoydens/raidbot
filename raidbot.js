@@ -26,16 +26,16 @@ process.on('uncaughtException', function(e) {
 
 function raid(msg) {
   if (msg.content.split(' ')[3]) {
-    var message = "[raid]userid list: ```";
+    var message = "[raid] userid list: ```";
     var sql;
     var guildid = msg.guild.id;
     var term = msg.content.split(' ');
     term.splice(0, 3);
     term = term.join(' ');
     var time = new Date(new Date().getTime() - ((config[msg.guild.id].raid.lookback | 5) * 60 * 1000)).getTime();
-    if (['user', 'name'].includes(msg.content.split(' ')[2].toLowerCase())) {
+    if (['user', 'name', 'username'].includes(msg.content.split(' ')[2].toLowerCase())) {
       sql = `SELECT userid, username FROM g${guildid} WHERE username LIKE '${term}%' AND timestamp > ${time} GROUP BY userid`;
-    } else if (['message'].includes(msg.content.split(' ')[2].toLowerCase())) {
+    } else if (['message', 'content', 'text'].includes(msg.content.split(' ')[2].toLowerCase())) {
       sql = `SELECT userid, username FROM g${guildid} WHERE message LIKE '${term}%' GROUP BY userid`;
     } else {
       msg.reply('[raid]invalid\n either use a username or a message:\n`@server raid user username\n@server raid message messagecontent`');
@@ -47,7 +47,11 @@ function raid(msg) {
           message = message + "\n" + row.userid;
         });
         logcommands(message + "```");
-        msg.reply(message + "```\nif you think these are all raidbots, pls report them to discord on (<https://http//dis.gd/contact> => trust and safety => type: raiding) or directly to a discord trust and safety member");
+        if (config[guildid].id_list) {
+          msg.reply(message + "```\nif you think these are all raidbots, pls report them to discord on (<https://http//dis.gd/contact> => trust and safety => type: raiding) or directly to a discord trust and safety member");
+        } else {
+          msg.reply(`[raid] attempting to ban ${rows.length} users for raiding`);
+        }
         rows.forEach(row => {
           try {
             if (zombie) {
