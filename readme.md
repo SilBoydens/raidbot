@@ -51,7 +51,6 @@ to add roles that can use the commands:
 
 # TODO
 add more to readme  
-config for send user ID's on raid  
 config input validation  
 config add list of users who should get dm's on command usage  
 split in even more files  
