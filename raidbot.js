@@ -109,7 +109,7 @@ function lockdown(msg) {
 
 function settings(msg) {
   var [action, module, option, val] = msg.content.split(' ').slice(2, 6);
-  createconfig(msg.guild.id);
+  createconfig(msg.guild.id, msg);
   if (!config[msg.guild.id][module]) {
     msg.reply(`invallid module name ${module}\n`+
       `the following modules exist:\n`+
@@ -249,7 +249,7 @@ function safeconfig() {
   fs.writeFile('raidbot.json', JSON.stringify(config, null, 2), 'utf8', function () {});
 }
 
-function createconfig(guildID) {
+function createconfig(guildID, msg) {
   if (!config[guildID]) msg.channel.send('creating default config');
   config[guildID] = Object.assign(require('./default_config.json'), config[guildID]);
 }
@@ -283,6 +283,7 @@ function logcommands(msg) {
 client.on('ready', () => {
   // i don't care about old messages as i use the sqlite to keep track
   // because of low ram on the vps, every minute, clear all messages older then a minute
+  // yes, sweeping messages clears more memory then the ramdisk uses
   setInterval(() => {
     client.sweepMessages(60);
   }, 60000);
@@ -304,6 +305,7 @@ client.on('ready', () => {
 });
 
 client.on('message', msg => {
+  console.log(msg.content);
   // don't listen to other bots, but listen to yourself for worst case scenario
   if (msg.author.bot && !(msg.author.id === client.user.id)) return;
   if (zombie) { // prevent the dev bot from talking
