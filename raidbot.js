@@ -305,7 +305,7 @@ client.on('ready', () => {
 });
 
 client.on('message', msg => {
-  msg.content.replace(`<@!${client.user.id}>`, `<@${client.user.id}>`)
+  msg.content = msg.content.replace(`<@!${client.user.id}>`, `<@${client.user.id}>`);
   // don't listen to other bots, but listen to yourself for worst case scenario
   if (msg.author.bot && !(msg.author.id === client.user.id)) return;
   if (zombie) { // prevent the dev bot from talking
