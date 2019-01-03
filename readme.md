@@ -50,6 +50,7 @@ to add roles that can use the commands:
 (you need admin perms to use the "config" command, you can't set allowed roles for config)
 
 # TODO
+slowmode
 add more to readme  
 config input validation  
 config add list of users who should get dm's on command usage  

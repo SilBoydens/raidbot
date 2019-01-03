@@ -141,9 +141,10 @@ function settings(msg) {
       break;
     case 'remove':
       value = config[msg.guild.id][module][option];
+      id = val.match(/\d/g).join('');
       if (!Array.isArray(value)) {msg.reply('not a list, pls use \'set\''); return;}
-      if (arr.indexOf(val.match(/\d/g).join(''))) {
-        arr.splice(arr.indexOf(val.match(/\d/g).join('')), 1);
+      if (value.indexOf(id) !== -1) {
+        config[msg.guild.id][module][option].splice(value.indexOf(id), 1);
         response = `the the new value(s) for ${option} in module ${module} is/are:\n - `;
       } else {
         response = `i did not find that :cry:\nthe the value(s) for ${option} in module ${module} is/are:\n - `;
