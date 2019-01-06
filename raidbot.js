@@ -286,16 +286,16 @@ function logcommands(msg) {
     client.channels.get(process.env.LOGCHANNEL).send(message);
   }
   // log for server owners/admins
-  config[msg.guild.id].general.send_logs.forEach(channel => {
-    if(client.channels.get(channel)) {
-      client.channels.get(channel).send(message);
-    } else {
-      client.fetchUser(channel)
-      .then(dm => {
-        dm.send(message);
-      });
-    }
-  });
+  // config[msg.guild.id].general.send_logs.forEach(channel => {
+  //   if(client.channels.get(channel)) {
+  //     client.channels.get(channel).send(message);
+  //   } else {
+  //     client.fetchUser(channel)
+  //     .then(dm => {
+  //       dm.send(message);
+  //     });
+  //   }
+  // });
 }
 
 /* ###### CLIENT ###### */
