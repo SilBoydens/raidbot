@@ -1,4 +1,4 @@
-/*jshint esversion: 6 */
+/* jshint esversion: 6 */
 require('dotenv').load();
 /* require envs:
   RAIDBOT_TOKEN
@@ -27,20 +27,22 @@ process.on('uncaughtException', function(e) {
 function raid(msg) {
   if (msg.content.split(' ')[3]) {
     var message = "[raid] userid list: ```";
+    var reason = `raid\n`;
     var sql;
     var guildid = msg.guild.id;
-    var term = msg.content.split(' ');
-    term.splice(0, 3);
-    term = term.join(' ');
+    var term = msg.content.split(' ').splice(0, 3).join(' ');
     var time = new Date(new Date().getTime() - ((config[msg.guild.id].raid.lookback | 5) * 60 * 1000)).getTime();
     if (['user', 'name', 'username'].includes(msg.content.split(' ')[2].toLowerCase())) {
       sql = `SELECT userid, username FROM g${guildid} WHERE username LIKE '${term}%' AND timestamp > ${time} GROUP BY userid`;
     } else if (['message', 'content', 'text'].includes(msg.content.split(' ')[2].toLowerCase())) {
+      reason = reason + `with message \`${term}\`\n`;
       sql = `SELECT userid, username FROM g${guildid} WHERE message LIKE '${term}%' GROUP BY userid`;
     } else {
       msg.reply('[raid]invalid\n either use a username or a message:\n`@server raid user username\n@server raid message messagecontent`');
       return;
     }
+    reason = reason + `banned by ${msg.author.tag} using ${client.user.tag} on `;
+    reason = reason + new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC timezone';
     db.all(sql, function(err,rows) {
       if (rows.length) {
         rows.forEach(row => {
@@ -55,9 +57,9 @@ function raid(msg) {
         rows.forEach(row => {
           try {
             if (zombie) {
-              console.log(`ban from ${msg.guild.id}: ${row.userid}`);
+              console.log(`ban from ${msg.guild.id}: ${row.userid} with reason:\n${reason}`);
             } else {
-              msg.guild.member(row.userid).ban({reason: 'raid', days: 7});
+              msg.guild.member(row.userid).ban({reason: reason, days: 7});
             }
           } catch (error) {
             console.error(error);
@@ -110,17 +112,22 @@ function lockdown(msg) {
 function settings(msg) {
   var [action, module, option, val] = msg.content.split(' ').slice(2, 6);
   createconfig(msg.guild.id, msg);
+  var usage = `\n\n**usage**\n\n@${client.user.tag} list/add/remove/set module/command option value`;
+  if (!['list', 'add', 'remove', 'set'].includes(action)) {
+    msg.reply(`invallid action name '${action}', the following are valid:\n - list\n - add\n - remove\n - set` + usage);
+    return;
+  }
   if (!config[msg.guild.id][module]) {
     msg.reply(`invallid module name ${module}\n`+
       `the following modules exist:\n`+
-      ` - ${Object.keys(config[msg.guild.id]).join('\n - ')}`);
+      ` - ${Object.keys(config[msg.guild.id]).join('\n - ')}` + usage);
     return;
   }
   if (!config[msg.guild.id][module][option]) {
     console.log(config[msg.guild.id][option]);
     msg.reply(`invallid option ${option} for module ${module}\n`+
-      `the following options exist:\n`+
-      ` - ${Object.keys(config[msg.guild.id][module]).join('\n - ')}`);
+      `the following options exist for module ${module}:\n`+
+      ` - ${Object.keys(config[msg.guild.id][module]).join('\n - ')}` + usage);
     return;
   }
   var response, value = '';
@@ -253,6 +260,7 @@ function safeconfig() {
 function createconfig(guildID, msg) {
   if (!config[guildID]) msg.channel.send('creating default config');
   config[guildID] = Object.assign(require('./default_config.json'), config[guildID]);
+  console.log(config[guildID])
 }
 
 function senderrors(msg, e) {
@@ -272,11 +280,22 @@ function senderrors(msg, e) {
 }
 
 function logcommands(msg) {
+  var message = msg.content ? `[${msg.guild.id}] <@${msg.author.id}> (${msg.author.id}) used command\n${msg.content.slice(22)}` : msg;
+  // log for bot owner
   if (process.env.LOGCHANNEL) {
-    client.channels.get(process.env.LOGCHANNEL).send(
-      msg.content ? `[${msg.guild.id}] <@${msg.author.id}> (${msg.author.id}) used command\n${msg.content.slice(22)}` : msg
-    );
+    client.channels.get(process.env.LOGCHANNEL).send(message);
   }
+  // log for server owners/admins
+  config[msg.guild.id].general.send_logs.forEach(channel => {
+    if(client.channels.get(channel)) {
+      client.channels.get(channel).send(message);
+    } else {
+      client.fetchUser(channel)
+      .then(dm => {
+        dm.send(message);
+      });
+    }
+  });
 }
 
 /* ###### CLIENT ###### */
