@@ -5,6 +5,7 @@ require('dotenv').load();
   DB_FILE
   CONFIG_FILE
 */
+const deepmerge = require('deepmerge');
 const Discord = require('discord.js');
 const client = new Discord.Client();
 var sqlite3 = require('sqlite3').verbose();
@@ -30,7 +31,8 @@ function raid(msg) {
     var reason = `raid\n`;
     var sql;
     var guildid = msg.guild.id;
-    var term = msg.content.split(' ').splice(0, 3).join(' ');
+    var term = msg.content.split(' ');
+    term.splice(0, 3).join(' ');
     var time = new Date(new Date().getTime() - ((config[msg.guild.id].raid.lookback | 5) * 60 * 1000)).getTime();
     if (['user', 'name', 'username'].includes(msg.content.split(' ')[2].toLowerCase())) {
       sql = `SELECT userid, username FROM g${guildid} WHERE username LIKE '${term}%' AND timestamp > ${time} GROUP BY userid`;
@@ -48,9 +50,9 @@ function raid(msg) {
         rows.forEach(row => {
           message = message + "\n" + row.userid;
         });
-        logcommands(message + "```");
-        if (config[guildid].id_list) {
-          msg.reply(message + "```\nif you think these are all raidbots, pls report them to discord on (<https://http//dis.gd/contact> => trust and safety => type: raiding) or directly to a discord trust and safety member");
+        logcommands(msg, message + "```");
+        if (config[guildid].raid.id_list) {
+          msg.reply(message + "```\nif you think these are all raidbots, pls report them to discord on <https://http//dis.gd/contact> => trust and safety => type: raiding or directly to a discord trust and safety member");
         } else {
           msg.reply(`[raid] attempting to ban ${rows.length} users for raiding`);
         }
@@ -111,7 +113,6 @@ function lockdown(msg) {
 
 function settings(msg) {
   var [action, module, option, val] = msg.content.split(' ').slice(2, 6);
-  createconfig(msg.guild.id, msg);
   var usage = `\n\n**usage**\n\n@${client.user.tag} list/add/remove/set module/command option value`;
   if (!['list', 'add', 'remove', 'set'].includes(action)) {
     msg.reply(`invallid action name '${action}', the following are valid:\n - list\n - add\n - remove\n - set` + usage);
@@ -219,10 +220,6 @@ function isAllowed(msg, command) {
   if (msg.content.startsWith(`<@${client.user.id}> config`)) {
     return false; // only for admins and those already got a return true
   }
-  if (!config[msg.guild.id]) {
-    msg.reply(`failed to find config, try \`@${client.user.tag} config\` to create or update this servers config`);
-    return false;
-  }
   var allowed = false;
   if (config[msg.guild.id][command]) {
     msg.member.roles.forEach((v, e1)=>config[msg.guild.id][command].allowed_roles.forEach((e2)=> {
@@ -254,13 +251,18 @@ function cleanDB() {
 
 function safeconfig() {
   var fs = require('fs');
-  fs.writeFile('raidbot.json', JSON.stringify(config, null, 2), 'utf8', function () {});
+  fs.writeFile(process.env.CONFIG_FILE, JSON.stringify(config, null, 2), 'utf8', function () {});
 }
 
 function createconfig(guildID, msg) {
-  if (!config[guildID]) msg.channel.send('creating default config');
-  config[guildID] = Object.assign(require('./default_config.json'), config[guildID]);
-  console.log(config[guildID])
+  var defaultconfig = require('./default_config.json');
+  if (!config[guildID]) {
+    msg.channel.send('creating default config');
+    config[guildID] = deepmerge(defaultconfig, {});
+  } else {
+    config[guildID] = deepmerge(defaultconfig, config[guildID]);
+  }
+  safeconfig();
 }
 
 function senderrors(msg, e) {
@@ -279,23 +281,23 @@ function senderrors(msg, e) {
   });
 }
 
-function logcommands(msg) {
-  var message = msg.content ? `[${msg.guild.id}] <@${msg.author.id}> (${msg.author.id}) used command\n${msg.content.slice(22)}` : msg;
+function logcommands(msg, message) {
+  message = message ? message : `[${msg.guild.id}] <@${msg.author.id}> (${msg.author.id}) used command\n${msg.content.slice(22)}`;
   // log for bot owner
   if (process.env.LOGCHANNEL) {
     client.channels.get(process.env.LOGCHANNEL).send(message);
   }
   // log for server owners/admins
-  // config[msg.guild.id].general.send_logs.forEach(channel => {
-  //   if(client.channels.get(channel)) {
-  //     client.channels.get(channel).send(message);
-  //   } else {
-  //     client.fetchUser(channel)
-  //     .then(dm => {
-  //       dm.send(message);
-  //     });
-  //   }
-  // });
+  config[msg.guild.id].general.sendlogs.forEach(channel => {
+    if(client.channels.get(channel)) {
+      client.channels.get(channel).send(message);
+    } else {
+      client.fetchUser(channel)
+      .then(dm => {
+        dm.send(message);
+      });
+    }
+  });
 }
 
 /* ###### CLIENT ###### */
@@ -336,6 +338,7 @@ client.on('message', msg => {
   if (msg.guild) { // in a guild
     log(msg);
     if(msg.content.startsWith(`<@${client.user.id}> `)) {
+      createconfig(msg.guild.id, msg);
       logcommands(msg);
       var command = msg.content.split(' ')[1];
       if (commands.hasOwnProperty(command) && isAllowed(msg, command)) {

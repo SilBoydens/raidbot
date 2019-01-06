@@ -1,4 +1,7 @@
 {
+  "general": {
+    "sendlogs": []
+  },
   "raid": {
     "lookback": "5",
     "id_list": true,
