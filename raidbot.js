@@ -268,6 +268,7 @@ function createconfig(guildID, msg) {
 function senderrors(msg, e) {
   // who doesn't like his dm spammed with errors? (mostly missing permission)
   config.owners.forEach(owner => {
+    if (!client.user) return console.log(e.stack); // if the bot throws an error before the client was logged in.
     if (owner === client.user.id) return; // don't dm yourself
     client.fetchUser(owner)
     .then(dm => { // this also sends in zombie mode
