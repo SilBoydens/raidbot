@@ -188,7 +188,7 @@ function changelog(msg) {
       if (user === client.user.id) return; // don't dm yourself
       client.fetchUser(user)
       .then(dm => {
-        dm.send(message); 
+        dm.send(message);
       });
     });
   } else if (config.changelog.includes(msg.author.id)) {
@@ -216,7 +216,7 @@ function log(msg) {
 function isAllowed(msg, command) {
   if (config.owners.includes(msg.author.id)) return true;
   // for the public bot, this is just 1 person (and the bot itself) ;-)
-  if (msg.member.hasPermission('Administrator')) return true;
+  if (msg.member.hasPermission('ADMINISTRATOR')) return true;
   if (msg.content.startsWith(`<@${client.user.id}> config`)) {
     return false; // only for admins and those already got a return true
   }
