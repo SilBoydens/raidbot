@@ -9,298 +9,34 @@ const deepmerge = require('deepmerge');
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(process.env.DB_FILE);
+const db = new sqlite3.Database(process.env.DB_FILE); client.db = db; // we want .db to be accessible everywhere
+const fs = require('fs');
 // config is kept in ram, but is writen to disk on changes
-let config = require(process.env.CONFIG_FILE);
+/* let config = require(process.env.CONFIG_FILE); client.config = config; */
+const config = require(process.env.CONFIG_FILE); client.config = config;
 let guilds = []; // list of guilds for dbclean job
 // in zombie mode, the bot doesn't talk or do anything at all, it only logs everything it should do to the console.
 // used for development, so the bot doesn't send doubles
 // node ./raidbot.js zombie
-const zombie = process.argv.includes("zombie");
+const zombie = process.argv.includes("zombie"); client.zombie = zombie;
+require('./util.js')(client, config, fs, guilds, deepmerge); // the functions we will use across the code, accessible via client.util
+
+// our friendly neighbourhood command handler
+client.commands = new Discord.Collection();
+fs.readdir("./commands/", (e, files) => {
+  if(e) return console.log(e);
+  files.forEach(file => {
+      if (!file.endsWith(".js")) return;
+      let properties = require(`./commands/${file}`);
+      let commandName = file.split(".")[0];
+      client.commands.set(commandName, properties);
+  });
+});
 
 process.on('uncaughtException', e => {
   console.error('Caught exception: ' + e);
   senderrors({content: 'uncaughtException in global'}, e);
 });
-
-/* ###### COMMANDS ###### */
-
-const raid = msg => {
-  if (msg.content.split(' ')[3]) {
-    let message = "[raid] userid list: ```";
-    let reason = `raid\n`;
-    let sql;
-    const guildid = msg.guild.id;
-    const term = msg.content.split(' ');
-    term.splice(0, 3).join(' ');
-    var time = new Date(new Date().getTime() - ((config[msg.guild.id].raid.lookback | 5) * 60 * 1000)).getTime();
-    if (['user', 'name', 'username'].includes(msg.content.split(' ')[2].toLowerCase())) {
-      sql = `SELECT userid, username FROM g${guildid} WHERE username LIKE '${term}%' AND timestamp > ${time} GROUP BY userid`;
-    } else if (['message', 'content', 'text'].includes(msg.content.split(' ')[2].toLowerCase())) {
-      reason = reason + `with message \`${term}\`\n`;
-      sql = `SELECT userid, username FROM g${guildid} WHERE message LIKE '${term}%' GROUP BY userid`;
-    } else {
-      msg.reply('[raid]invalid\n either use a username or a message:\n`@server raid user username\n@server raid message messagecontent`');
-      return;
-    }
-    reason = reason + `banned by ${msg.author.tag} using ${client.user.tag} on `;
-    reason = reason + new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC timezone';
-    db.all(sql, (err, rows) => {
-      if (rows.length) {
-        rows.map(row => message = message + "\n" + row.userid );
-        logcommands(msg, message + "```");
-        if (config[guildid].raid.id_list) {
-          msg.reply(message + "```\nif you think these are all raidbots, pls report them to discord on <https://http//dis.gd/contact> => trust and safety => type: raiding or directly to a discord trust and safety member");
-        } else {
-          msg.reply(`[raid] attempting to ban ${rows.length} users for raiding`);
-        }
-        rows.map(row => {
-          try {
-            if (zombie) {
-              console.log(`ban from ${msg.guild.id}: ${row.userid} with reason:\n${reason}`);
-            } else {
-              msg.guild.member(row.userid).ban({reason: reason, days: 7});
-            }
-          } catch (error) {
-            console.error(error);
-            // ban failed
-          }
-        });
-      } else {
-        msg.reply("[raid] nothing found");
-      }
-    });
-  } else {
-    msg.reply(`[raid] could not find enough arguments
-      Usage:
-      \`@${client.user.tag} raid user username\`
-      \`@${client.user.tag} raid message messagecontent\`
-    `);
-  }
-}
-
-const lockdown = msg => {
-  const everyone = msg.guild.roles.get(msg.guild.id);
-  if (!msg.content.split(' ')[2]) {
-    if(everyone.hasPermission("SEND_MESSAGES")) {
-      try {
-        if (!zombie) everyone.setPermissions(everyone.permissions - 0x800);
-        const links = ['https://zippy.gfycat.com/CarelessSplendidKiskadee.webm', 'https://i.gifer.com/7DUg.mp4'];
-        msg.reply(`server locked down\n${links[Math.floor(Math.random()*links.length)]}`);
-      } catch(Exception) {
-        msg.reply("something went wrong while locking down\nhttps://i.gifer.com/8urI.mp4");
-      }
-    } else {
-      msg.reply("server already in lockdown state");
-    }
-  } else if (msg.content.split(' ')[2] && msg.content.split(' ')[2] === 'off') {
-    if(!everyone.hasPermission("SEND_MESSAGES")) {
-      try {
-        if (!zombie) everyone.setPermissions(everyone.permissions + 0x800);
-        msg.reply("unlocked the server");
-      } catch(Exception) {
-        msg.reply("something went wrong while unlocking");
-      }
-    } else {
-      msg.reply("can not unlock, server is not locked");
-    }
-  } else {
-    msg.reply('[lockdown] could not understand "' + msg.content.split(' ')[2] + '"\nUsage:\n`@server lockdown` lock the server down\n`@server lockdown off` disable lockdown');
-  }
-}
-
-const settings = msg => {
-  const [action, module, option, val] = msg.content.split(' ').slice(2, 6);
-  const usage = `\n\n**usage**\n\n@${client.user.tag} list/add/remove/set module/command option value`;
-  if (!['list', 'add', 'remove', 'set'].includes(action)) {
-    msg.reply(`invallid action name '${action}', the following are valid:\n - list\n - add\n - remove\n - set` + usage);
-    return;
-  }
-  if (!config[msg.guild.id][module]) {
-    msg.reply(`invallid module name ${module}\n`+
-      `the following modules exist:\n`+
-      ` - ${Object.keys(config[msg.guild.id]).join('\n - ')}` + usage);
-    return;
-  }
-  if (!config[msg.guild.id][module][option]) {
-    console.log(config[msg.guild.id][option]);
-    msg.reply(`invallid option ${option} for module ${module}\n`+
-      `the following options exist for module ${module}:\n`+
-      ` - ${Object.keys(config[msg.guild.id][module]).join('\n - ')}` + usage);
-    return;
-  }
-  let response, value = '';
-  switch(action) {
-    case 'list':
-      response = `the value(s) for ${option} in module ${module} is/are:\n - `;
-      value = config[msg.guild.id][module][option];
-      if (Array.isArray(value)) value = value.join('\n - ');
-      msg.reply(response + value);
-      break;
-    case 'add':
-      value = config[msg.guild.id][module][option];
-      if (!Array.isArray(value)) {msg.reply('not a list, pls use \'set\''); return;}
-      config[msg.guild.id][module][option].push(val.match(/\d/g).join(''));
-      response = `the the new value(s) for ${option} in module ${module} is/are:\n - `;
-      value = config[msg.guild.id][module][option].join('\n - ');
-      msg.reply(response + value);
-      break;
-    case 'remove':
-      value = config[msg.guild.id][module][option];
-      id = val.match(/\d/g).join('');
-      if (!Array.isArray(value)) {msg.reply('not a list, pls use \'set\''); return;}
-      if (value.indexOf(id) !== -1) {
-        config[msg.guild.id][module][option].splice(value.indexOf(id), 1);
-        response = `the the new value(s) for ${option} in module ${module} is/are:\n - `;
-      } else {
-        response = `i did not find that :cry:\nthe the value(s) for ${option} in module ${module} is/are:\n - `;
-      }
-      value = config[msg.guild.id][module][option].join('\n - ');
-      msg.reply(response + value);
-      break;
-    case 'set':
-      value = config[msg.guild.id][module][option];
-      if (Array.isArray(value)) {msg.reply('this is a list, pls use \'add\' and \'remove\''); return;}
-      config[msg.guild.id][module][option] = val;
-      response = `the the new value for ${option} in module ${module} is: `;
-      value = config[msg.guild.id][module][option];
-      msg.reply(response + value);
-      break;
-    default:
-      msg.reply(`i wasn't able to understand ${action}, try using:
-       - list (works for everything)
-       - add (for lists)
-       - remove (for lists)
-       - set (not for lists)`);
-      return;
-  };
-  safeconfig();
-};
-
-let commands = { raid: raid, lockdown: lockdown, config: settings };
-
-const changelog = msg => {
-  if (config.owners.includes(msg.author.id)) {
-    var message = msg.content.substring(10);
-    config.changelog.concat(config.owners).map(user => {
-      if (user === client.user.id) return; // don't dm yourself
-      client.fetchUser(user)
-      .then(dm => {
-        dm.send(message);
-      });
-    });
-  } else if (config.changelog.includes(msg.author.id)) {
-    msg.channel.send('you won\'t receive changelogs anymore :sad:');
-    config.changelog = config.changelog.filter((value, index, arr) => {
-      return value !== msg.author.id;
-    });
-  } else {
-    msg.channel.send('you will now start receiving changelogs :tada:');
-    config.changelog.push(msg.author.id);
-  };
-  safeconfig();
-};
-
-let DMcommands = { changelog: changelog };
-
-/* ###### OTHERS ###### */
-
-const log = msg => {
-  if (!guilds.includes(msg.guild.id)) createTable(msg.guild.id);
-  let stmt = db.prepare(`INSERT INTO g${msg.guild.id} VALUES (?, ?, ?, ?)`);
-  stmt.run(msg.author.id, msg.author.username, msg.content, new Date());
-};
-
-const isAllowed = (msg, command) => {
-  if (config.owners.includes(msg.author.id)) return true;
-  // for the public bot, this is just 1 person (and the bot itself) ;-)
-  if (msg.member.hasPermission('ADMINISTRATOR')) return true;
-  if (msg.content.startsWith(`<@${client.user.id}> config`)) {
-    return false; // only for admins and those already got a return true
-  }
-  let allowed = false;
-  if (config[msg.guild.id][command]) {
-    msg.member.roles.map((v, e1) => config[msg.guild.id][command].allowed_roles.map((e2) => {
-      if (e1 === e2) {
-        allowed = true;
-        return true;
-      };
-    }));
-  };
-  return allowed;
-};
-
-const createTable = guildid => {
-  guilds.push(guildid);
-  // table names start with a g for guilds, because they can't start with a number
-  db.run(`CREATE TABLE IF NOT EXISTS g${guildid} (
-    userid nchar not null,
-    username nchar not null,
-    message nchar not null,
-    timestamp datetime not null);`);
-};
-
-const cleanDB = () => {
-  guilds.map(guildid => {
-    let stmt = db.prepare(`DELETE FROM g${guildid} WHERE timestamp < ${new Date(new Date().getTime() - (60 * 60 * 1000)).getTime()}`);
-    stmt.run();
-  });
-};
-
-const safeconfig = () => {
-  const fs = require('fs');
-  fs.writeFile(process.env.CONFIG_FILE, JSON.stringify(config, null, 2), 'utf8', function () {});
-};
-
-const createconfig = (guildID, msg) => {
-  const defaultconfig = require('./default_config.json');
-  if (!config[guildID]) {
-    msg.channel.send('creating default config');
-    config[guildID] = deepmerge(defaultconfig, {});
-  } else {
-    config[guildID] = deepmerge(defaultconfig, config[guildID]);
-  };
-  safeconfig();
-};
-
-const senderrors = (msg, e) => {
-  // who doesn't like his dm spammed with errors? (mostly missing permission)\
-  if (client.readyAt) { //had to use readyAt because it was mapping before the bot was ready
-    config.owners.map(owner => {
-      if (owner === client.user.id) return; // don't dm yourself
-      client.fetchUser(owner)
-      .then(dm => { // this also sends in zombie mode
-        dm.send(`a error has occoured:
-        message: ${msg.content}\n${e.message}`);
-        dm.send(`
-        \`\`\`
-        ${e.stack}
-        \`\`\``);// let's hope stacktraces aren't 1988+ characters
-      });
-    });
-  };
-};
-
-const logcommands = (msg, message) => {
-  message = message ? message : `[${msg.guild.id}] <@${msg.author.id}> (${msg.author.id}) used command\n${msg.content.slice(22)}`;
-  // log for bot owner
-  if (process.env.LOGCHANNEL) {
-    client.channels.get(process.env.LOGCHANNEL).send(message);
-  };
-  // log for server owners/admins
-  config[msg.guild.id].general.sendlogs.forEach(channel => {
-    if(client.channels.get(channel)) {
-      client.channels.get(channel).send(message);
-    } else {
-      client.fetchUser(channel)
-      .then(dm => {
-        dm.send(message);
-      });
-    };
-  });
-};
-
-/* ###### CLIENT ###### */
 
 client.on('ready', () => {
   // i don't care about old messages as i use the sqlite to keep track
@@ -312,55 +48,67 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   console.log(`serving ${client.guilds.size} guilds:`);
   client.guilds.map(guild => {
-    createTable(guild.id);
+    client.util.createTable(guild.id);
     console.log('*', guild.name);
   });
   client.user.setActivity("helping moderators");
   // clean the sqlite db every hour
   setInterval(() => {
-    cleanDB();
+    client.util.cleanDB();
   }, 60 * 60 * 1000);
   setTimeout(() => {
     // for when lockdown locks out the moderators.... has happened..... LOL
-    // client.channels.get("channelID").send(`<@${client.user.id}> lockdown off`);
+    // client.commands.get('lockdown').execute(client, msg, ['off']);
   }, 5000);
 });
 
 client.on('message', msg => {
-  msg.content = msg.content.replace(`<@!${client.user.id}>`, `<@${client.user.id}>`);
-  // don't listen to other bots, but listen to yourself for worst case scenario
-  if (msg.author.bot && !(msg.author.id === client.user.id)) return;
-  if (zombie) { // prevent the dev bot from talking
-    let send = function (args) {console.log(`trying to send message while in zombie mode: \n`, args);};
+  // don't listen to other bots
+  if(msg.author.bot) return;
+  if(zombie) { // prevent the dev bot from talking
+    let send = function (args) {console.log(`Trying to send message while in zombie mode: \n`, args);};
     msg.reply = send;
     msg.channel.send = send;
   };
-  if (msg.guild) { // in a guild
-    log(msg);
-    if(msg.content.startsWith(`<@${client.user.id}> `)) {
-      createconfig(msg.guild.id, msg);
-      logcommands(msg);
-      const command = msg.content.split(' ')[1];
-      if (commands.hasOwnProperty(command) && isAllowed(msg, command)) {
-        try {
-          commands[command](msg);
-        } catch (e) {
-          msg.channel.send(`something went wrong :cry:`);
-          console.error(e);
-          senderrors(msg, e);
-        };
+  let prefix = false;
+  const Prefixes = [`<@${client.user.id}> `, `<@!${client.user.id}> `];
+  for(const aPrefix of Prefixes) {
+    if(msg.content.startsWith(aPrefix)) prefix = (!msg.guild) ? '' : aPrefix; // no prefix in DMs
+  }
+  const args = msg.content.slice(prefix.length).trim().split(/ +/g);
+  const command = args.shift().toLowerCase();
+  const cmd = client.commands.get(command);
+  if(msg.guild) {
+    if(!prefix) return;
+    if(!cmd) return;
+    client.util.log(msg);
+    client.util.createConfig(msg.guild.id, msg);
+    client.util.logCommands(msg);
+    if(client.util.isAllowed(msg, command)) {
+      try {
+        cmd.execute(client, msg, args);
+      } catch (e) {
+        msg.channel.send('Something went wrong. 😢');
+        console.error(e);
+        client.util.sendErrors(msg, e);
       };
     };
-  } else { // in DM
-    if (msg.author.bot) return; //this stops sending the help message when the bot says something
-    var DMcommand = msg.content.split(' ')[0];
-    if (DMcommands.hasOwnProperty(DMcommand)) {
-      DMcommands[DMcommand](msg);
-      msg.channel.send('want help? send anything in here that is not a command');
+  } else {
+    if(msg.author.bot) return;
+    if(!cmd) {
+      return msg.channel.send('👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md');
+    }
+    if(cmd.dm) {
+      try {
+        cmd.execute(client, msg, args)
+      } catch(e) {
+        console.log(e);
+        client.util.sendErrors(msg, e);
+      }
     } else {
-      msg.channel.send(':eyes: you seems to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md');
-    };
-  };
+      return msg.channel.send('Want help? send anything in here that is not a command');
+    }
+  }
 });
 
 client.login("bot "+ process.env.RAIDBOT_TOKEN);
