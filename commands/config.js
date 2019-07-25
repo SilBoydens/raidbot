@@ -8,6 +8,7 @@ module.exports = {
 			msg.reply(`Invalid action name '${action}', the following are valid:\n - list\n - add\n - remove\n - set` + usage);
 			return;
 		}
+		const {util} = require('../util.js');
 		if (!client.config[msg.guild.id][module]) {
 			msg.reply(`Invalid module name ${module}\n` +
 				`the following modules exist:\n` +
@@ -68,13 +69,9 @@ module.exports = {
 				msg.reply(response + value);
 				break;
 			default:
-				msg.reply(`I wasn't able to understand ${action}, try using:
-                                - list (works for everything)
-                                - add (for lists)
-                                - remove (for lists)
-                                - set (not for lists)`);
+				msg.reply(`I wasn't able to understand ${action}, try using:\n- list (works for everything)\n- add (for lists)\n- remove (for lists)\n- set (not for lists)`);
 				return;
 		};
-		client.util.saveConfig();
+		util.saveConfig(client);
 	}
 }
