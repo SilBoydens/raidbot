@@ -81,7 +81,7 @@ client.on('message', msg => {
   for(const aPrefix of prefixes) {
     if(msg.content.startsWith(aPrefix)) prefix = (!msg.guild) ? '' : aPrefix; // no prefix in DMs
   }
-  if(!aPrefix && !msg.channel.guild) return;
+  if(!prefix && !msg.channel.guild) return;
   const args = msg.content.slice(prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
   const cmd = client.commands.get(command);
