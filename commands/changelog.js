@@ -12,7 +12,7 @@ module.exports = {
           dm.send('You will now start receiving changelogs. 🎉');
           client.config.changelog.push(msg.author.id);
         }
-        client.util.saveConfig();
+        client.util.saveConfig(client);
       });
     }
 }
