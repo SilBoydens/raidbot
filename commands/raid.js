@@ -18,12 +18,13 @@ module.exports = {
           msg.reply(`[raid]invalid\n either use a username or a message:\n\`@${client.user.tag} raid user username\n@${client.user.tag} raid message messagecontent\``);
           return;
         }
+        const {util} = require('../util.js');
         reason = reason + `banned by ${msg.author.tag} using ${client.user.tag} on `;
         reason = reason + new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC timezone';
         client.db.all(sql, (err, rows) => {
           if (rows.length) {
             rows.map(row => message = message + "\n" + row.userid );
-            client.util.logCommands(msg, message + "```");
+            util.logCommands(client, msg, message + "```");
             if (client.config[guildid].raid.id_list) {
               msg.reply(message + "```\nIf you think these are all raidbots, please report them to discord on <https://http//dis.gd/contact> => trust and safety => type: raiding or directly to a discord trust and safety member");
             } else {
