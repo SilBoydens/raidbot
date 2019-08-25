@@ -8,7 +8,7 @@ module.exports = {
 			msg.reply(`Invalid action name '${action}', the following are valid:\n - list\n - add\n - remove\n - set` + usage);
 			return;
 		}
-		const {util} = require('../util.js');
+		const util = require('../util.js');
 		if (!client.config[msg.guild.id][module]) {
 			msg.reply(`Invalid module name ${module}\n` +
 				`the following modules exist:\n` +
