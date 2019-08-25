@@ -3,24 +3,6 @@ const util = {
     let stmt = client.db.prepare(`INSERT INTO g${msg.guild.id} VALUES (?, ?, ?, ?)`);
     stmt.run(msg.author.id, msg.author.username, msg.content, new Date());
   },
-  isAllowed(client, msg, command) {
-    if(client.config.owners.includes(msg.author.id)) return true;
-    // for the public bot, this is just 1 person (and the bot itself) ;-)
-    if(msg.member.hasPermission('ADMINISTRATOR')) return true;
-    if(msg.content.startsWith(`<@${client.user.id}> config`)) {
-      return false; // only for admins and those already got a return true
-    }
-    let allowed = false;
-    if(config[msg.guild.id][command]) {
-      msg.member.roles.map((v, e1) => config[msg.guild.id][command].allowed_roles.map((e2) => {
-        if (e1 === e2) {
-          allowed = true;
-          return true;
-        };
-      }));
-    };
-    return allowed;
-  },
   createTable(client, guilds, guildid) {
     guilds.push(guildid);
     // table names start with a g for guilds, because they can't start with a number
@@ -30,7 +12,7 @@ const util = {
       message nchar not null,
       timestamp datetime not null);`);
   },
-  cleanDB(guilds) {
+  cleanDB(client, guilds) {
     guilds.map(guildid => {
       let stmt = client.db.prepare(`DELETE FROM g${guildid} WHERE timestamp < ${new Date(new Date().getTime() - (60 * 60 * 1000)).getTime()}`);
       stmt.run();
@@ -40,7 +22,7 @@ const util = {
     const fs = require('fs');
     fs.writeFile(process.env.CONFIG_FILE, JSON.stringify(client.config, null, 2), 'utf8', function () {});
   },
-  createConfig(guildID, msg) {
+  createConfig(client, guildID, msg) {
     const defaultConfig = require('./default_config.json');
     const {config} = client;
     const deepmerge = require('deepmerge');
@@ -50,7 +32,7 @@ const util = {
     } else {
       config[guildID] = deepmerge(defaultConfig, config[guildID]);
     };
-    client.util.saveConfig(client);
+    this.saveConfig(client);
   },
   sendErrors(client, msg, e) {
     // who doesn't like his dm spammed with errors? (mostly missing permission)\
@@ -89,6 +71,4 @@ const util = {
   }
 }
 
-module.exports = {
-  util
-}
+module.exports = util;
