@@ -88,10 +88,6 @@ client.on('message', msg => {
   const command = args.shift().toLowerCase();
   const cmd = client.commands.get(command);
 
-  function executeCommand() {
-    
-  }
-
   if(cmd) {
     if(msg.guild) {
       if(!guilds.includes(msg.guild.id)) util.createTable(client, guilds, msg.guild.id);
