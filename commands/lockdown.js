@@ -1,6 +1,6 @@
 module.exports = {
-    name: 'lockdown',
-    dm: false,
+    guildOnly: true,
+    group: 'serverMod',
     execute(client, msg, args) {
         const everyone = msg.guild.roles.get(msg.guild.id);
         if(!args[0]) {

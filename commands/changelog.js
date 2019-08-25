@@ -1,6 +1,6 @@
 module.exports = {
-    name: 'changelog',
-    dm: true,
+    guildOnly: false,
+    group: 'botOwner',
     execute(client, msg) {
       if(!client.config.owners.includes(msg.author.id)) return;
       client.fetchUser(msg.author.id)

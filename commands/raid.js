@@ -1,6 +1,6 @@
 module.exports = {
-    name: 'raid',
-    dm: false,
+    guildOnly: true,
+    group: 'serverMod',
     execute(client, msg, args) {
       if(args[1]) {
         let message = "[raid] userid list: ```";

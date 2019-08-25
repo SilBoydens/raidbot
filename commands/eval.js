@@ -1,12 +1,11 @@
 module.exports = {
-    name: 'eval',
-    dm: true,
+    guildOnly: false,
+    group: 'botOwner',
     execute(client, msg, args) {
-        if(!client.config.owners.includes(msg.author.id)) return;
-        const code = args.join(' ');
+        const code = args.join(' '), util = require('util');
         try {
             let evaled = eval(code.replace(/```(?:j(?:ava)?s(?:cript)?)?/g, ''));
-            if(typeof evaled !== 'string') evaled = require('util').inspect(evaled);
+            if(typeof evaled !== 'string') evaled = util.inspect(evaled);
             msg.channel.send(evaled, {code: 'js'});
         } catch(e) {
             msg.channel.send(e, {code: 'js'});

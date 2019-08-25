@@ -1,6 +1,6 @@
 module.exports = {
-	name: 'config',
-	dm: false,
+	guildOnly: true,
+	group: 'serverManager',
 	execute(client, msg, args) {
 		const [action, module, option, val] = args.slice(0, 4);
 		const usage = `\n\n**Usage**\n\n@${client.user.tag} list/add/remove/set module/command option value`;
