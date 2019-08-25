@@ -22,17 +22,19 @@ let guilds = []; // list of guilds for dbclean job
 
 client.zombie = process.argv.includes("zombie");
 
-const {util} = require('./util.js');
+const util = require('./util');
 
-// our friendly neighbourhood command handler
-client.commands = new Discord.Collection();
-fs.readdir("./commands/", (e, files) => {
-  if(error) throw err;
+const {Command, CommandContainer, checkPoint} = require('./commandHandler');
+client.commands = new CommandContainer();
+fs.readdir("./commands/", (error, files) => {
+  if(error) {
+    throw new Error(error);
+  }
+  files = files.filter(f => f.endsWith('.js'));
   files.forEach(file => {
-      if (!file.endsWith(".js")) return;
-      const properties = require(`./commands/${file}`);
+      const props = require(`./commands/${file}`);
       const commandName = file.split(".")[0];
-      client.commands.set(commandName, properties);
+      client.commands.set(commandName, new Command(commandName, props));
   });
 });
 
@@ -59,7 +61,7 @@ client.on('ready', () => {
   client.user.setActivity("helping moderators");
   // clean the sqlite db every hour
   setInterval(() => {
-    util.cleanDB(guilds);
+    util.cleanDB(client, guilds);
   }, 60 * 60 * 1000);
   setTimeout(() => {
     /**
@@ -79,44 +81,46 @@ client.on('message', msg => {
   let prefix;
   const prefixes = [`<@${client.user.id}> `, `<@!${client.user.id}> `];
   for(const aPrefix of prefixes) {
-    if(msg.content.startsWith(aPrefix)) prefix = (!msg.guild) ? '' : aPrefix; // no prefix in DMs
+    if(msg.content.startsWith(aPrefix)) prefix = msg.guild ? aPrefix : '';
   }
-  if(!prefix && !msg.channel.guild) return;
-  const args = msg.content.slice(prefix.length).trim().split(/ +/g);
+  if(msg.guild && !prefix) return;
+  const args = msg.content.slice(prefix ? prefix.length : '').trim().split(/\s+/g);
   const command = args.shift().toLowerCase();
   const cmd = client.commands.get(command);
-  if(msg.guild) {
-    if (!guilds.includes(msg.guild.id)) util.createTable(client, guilds, msg.guild.id);
-    if(!prefix) return;
-    if(!cmd) return;
-    util.log(client, msg);
-    util.createConfig(msg.guild.id, msg);
-    util.logCommands(client, msg);
-    if(util.isAllowed(client, msg, command)) {
-      try {
-        cmd.execute(client, msg, args);
-      } catch (e) {
-        msg.channel.send('Something went wrong. 😢');
-        console.error(e);
-        util.sendErrors(client, msg, e);
-      };
-    };
-  } else {
-    if(msg.author.bot) return;
-    if(!cmd) {
-      return msg.channel.send('👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md');
+
+  function executeCommand() {
+    
+  }
+
+  if(cmd) {
+    if(msg.guild) {
+      if(!guilds.includes(msg.guild.id)) util.createTable(client, guilds, msg.guild.id);
     }
-    if(cmd.dm) {
-      try {
-        cmd.execute(client, msg, args)
-      } catch(e) {
-        console.log(e);
-        util.sendErrors(client, msg, e);
-      }
-    } else {
+    if(!msg.guild && cmd.guildOnly) {
       return msg.channel.send('Want help? send anything in here that is not a command');
     }
+    if(checkPoint(client, msg, cmd) === 401) return;
+    try {
+      cmd.execute(client, msg, args);
+      if(msg.guild) {
+        util.log(client, msg);
+        util.createConfig(client, msg.guild.id, msg);
+        util.logCommands(client, msg);
+      }
+    } catch (e) {
+      msg.channel.send('Something went wrong. 😢');
+      console.error(e);
+      util.sendErrors(client, msg, e);
+    }
+  } else {
+    if(!msg.guild) {
+      msg.channel.send('👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md');
+      return;
+    } else {
+      util.createTable(client, guilds, msg.guild.id);
+    }
   }
+
 });
 
 client.login('BOT ' + process.env.RAIDBOT_TOKEN);
