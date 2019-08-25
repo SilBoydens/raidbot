@@ -1,14 +1,20 @@
+'use strict';
+
 module.exports = {
     guildOnly: false,
     group: 'botOwner',
     execute(client, msg, args) {
-        const code = args.join(' '), util = require('util');
+        let code = args.join(' '), util = require('util'), codeBlock = /^```(js|javascript)(.*)```$/si;
+        if(codeBlock.test(code)) code = code.match(codeBlock)[2].trim();
         try {
-            let evaled = eval(code.replace(/```(?:j(?:ava)?s(?:cript)?)?/g, ''));
-            if(typeof evaled !== 'string') evaled = util.inspect(evaled);
-            msg.channel.send(evaled, {code: 'js'});
-        } catch(e) {
-            msg.channel.send(e, {code: 'js'});
+            let evaled = eval(code);
+            if(typeof evaled !== 'string') {
+                evaled = util.inspect(evaled).replace(/`/g, '`' + String.fromCharCode(8203));
+            }
+            msg.channel.send(`\`\`\`js\n${evaled}\`\`\``);
+        } catch(error) {
+            error = ('' + error).replace(/`/g, '`' + String.fromCharCode(8203));
+            msg.channel.send(`\`\`\`js\n${error}\`\`\``);
         }
     }
-}
+};

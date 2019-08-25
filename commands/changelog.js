@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = {
     guildOnly: false,
     group: 'botOwner',
@@ -15,4 +17,4 @@ module.exports = {
         client.util.saveConfig(client);
       });
     }
-}
+};

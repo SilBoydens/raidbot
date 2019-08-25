@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = {
 	guildOnly: true,
 	group: 'serverManager',
@@ -74,4 +76,4 @@ module.exports = {
 		};
 		util.saveConfig(client);
 	}
-}
+};

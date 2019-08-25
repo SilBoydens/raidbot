@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = {
     guildOnly: true,
     group: 'serverMod',
@@ -50,4 +52,4 @@ module.exports = {
         msg.reply(`[raid] could not find enough arguments\nUsage:\n\`@${client.user.tag} raid user username\`\n\`@${client.user.tag} raid message messagecontent\``);
       }
     }
-}
+};

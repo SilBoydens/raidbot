@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = {
     guildOnly: true,
     group: 'serverMod',
@@ -33,4 +35,4 @@ module.exports = {
             msg.reply(`[lockdown] could not understand "${args[0]}"\nUsage:\n\`@${client.user.tag} lockdown\` locks the server down\n\`@${client.user.tag} lockdown off\` unlocks the server`);
         }
     }
-}
+};
