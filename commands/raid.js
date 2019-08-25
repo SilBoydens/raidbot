@@ -20,7 +20,7 @@ module.exports = {
           msg.reply(`[raid]invalid\n either use a username or a message:\n\`@${client.user.tag} raid user username\n@${client.user.tag} raid message messagecontent\``);
           return;
         }
-        const {util} = require('../util.js');
+        const util = require('../util.js');
         reason = reason + `banned by ${msg.author.tag} using ${client.user.tag} on `;
         reason = reason + new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC timezone';
         client.db.all(sql, (err, rows) => {
