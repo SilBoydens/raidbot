@@ -67,9 +67,9 @@ function checkPoint(client, msg, cmd) {
             break;
         }
         case 'serverMod': {
-            const modRoles = client.config[msg.guild.id][cmd.name].allowed_roles;
             response = 401;
-            if(modRoles.some(role => msg.member.roles.map(r => r.id).includes(role)) || msg.member.hasPermission('MANAGE_GUILD')) {
+            const allowedRoles = client.config[msg.guild.id][cmd.name].allowed_roles;
+            if(allowedRoles.some(role => msg.member.roles.map(r => r.id).includes(role)) || msg.member.hasPermission('MANAGE_GUILD')) {
                 response = 200;
             }
             break;
