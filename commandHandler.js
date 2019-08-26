@@ -43,6 +43,22 @@ class Command {
     }
 };
 
+function loadCommands(bot) {
+    const fs = require('fs');
+    bot.commands = new CommandContainer();
+    fs.readdir("./commands/", (error, files) => {
+      if(error) {
+        throw new Error(error);
+      }
+      files = files.filter(f => f.endsWith('.js'));
+      files.forEach(file => {
+          const props = require(`./commands/${file}`);
+          const commandName = file.split('.')[0];
+          bot.commands.set(commandName, new Command(commandName, props));
+      });
+    });
+};
+
 function checkPoint(client, msg, cmd) {
     let response = 200;
     if(cmd.guildOnly) {
@@ -82,5 +98,6 @@ function checkPoint(client, msg, cmd) {
 module.exports = {
     CommandContainer,
     Command,
+    loadCommands,
     checkPoint
 };
