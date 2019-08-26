@@ -8,7 +8,6 @@ require('dotenv').load();
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const sqlite3 = require('sqlite3').verbose();
-const fs = require('fs');
 // config is kept in ram, but is writen to disk on changes
 client.db = new sqlite3.Database(process.env.DB_FILE);
 client.config = require(process.env.CONFIG_FILE);
@@ -20,23 +19,12 @@ let guilds = []; // list of guilds for dbclean job
  * node ./raidbot.js zombie
  */
 
-client.zombie = process.argv.includes("zombie");
+client.zombie = process.argv.includes('zombie');
 
 const util = require('./util');
+const {loadCommands, checkPoint} = require('./commandHandler');
 
-const {Command, CommandContainer, checkPoint} = require('./commandHandler');
-client.commands = new CommandContainer();
-fs.readdir("./commands/", (error, files) => {
-  if(error) {
-    throw new Error(error);
-  }
-  files = files.filter(f => f.endsWith('.js'));
-  files.forEach(file => {
-      const props = require(`./commands/${file}`);
-      const commandName = file.split(".")[0];
-      client.commands.set(commandName, new Command(commandName, props));
-  });
-});
+loadCommands(client);
 
 process.on('uncaughtException', e => {
   console.error('Caught exception: ' + e);
@@ -58,17 +46,17 @@ client.on('ready', () => {
     util.createTable(client, guilds, guild.id);
     console.log('*', guild.name);
   });
-  client.user.setActivity("helping moderators");
+  client.user.setActivity('Helping moderators');
   // clean the sqlite db every hour
   setInterval(() => {
     util.cleanDB(client, guilds);
   }, 60 * 60 * 1000);
+  /*
+  for when lockdown locks out the moderators.... has happened..... LOL
   setTimeout(() => {
-    /**
-     * for when lockdown locks out the moderators.... has happened..... LOL
-     * client.commands.get('lockdown').execute(client, msg, ['off']);
-     */
+    client.commands.get('lockdown').execute(client, msg, ['off']);
   }, 5000);
+  */
 });
 
 client.on('message', msg => {
@@ -119,4 +107,4 @@ client.on('message', msg => {
 
 });
 
-client.login('BOT ' + process.env.RAIDBOT_TOKEN);
+client.login(process.env.RAIDBOT_TOKEN);
