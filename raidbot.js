@@ -62,10 +62,12 @@ client.on('ready', () => {
 client.on('message', msg => {
   if(msg.author.bot) return; // don't listen to other bots
   if(client.zombie) { // prevent the dev bot from talking
-    let send = function (args) {console.log(`Trying to send message while in zombie mode: \n`, args);};
+    let send = function (args) {
+      console.log(`Trying to send message while in zombie mode: \n`, args);
+    }
     msg.reply = send;
     msg.channel.send = send;
-  };
+  }
   if(msg.guild) {
     util.log(client, msg);
   }
