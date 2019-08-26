@@ -66,6 +66,9 @@ client.on('message', msg => {
     msg.reply = send;
     msg.channel.send = send;
   };
+  if(msg.guild) {
+    util.log(client, msg);
+  }
   let prefix;
   const prefixes = [`<@${client.user.id}> `, `<@!${client.user.id}> `];
   for(const aPrefix of prefixes) {
@@ -87,7 +90,6 @@ client.on('message', msg => {
     try {
       cmd.execute(client, msg, args);
       if(msg.guild) {
-        util.log(client, msg);
         util.createConfig(client, msg.guild.id, msg);
         util.logCommands(client, msg);
       }
