@@ -1,31 +1,41 @@
 'use strict';
 
 class CommandContainer extends Map {
-    constructor() {
-        super();
-        this.map = function(cb) {
-            const arr = [];
-            for(const thing of this.values()) {
-                arr.push(cb(thing));
-            }
-            return arr;
-        }
-        this.filter = function(cb) {
-            const arr = [];
-            for(const thing of this.values()) {
-                if(cb(thing)) {
-                    arr.push(thing);
+    constructor(...args) {
+        super(...args);
+        Object.defineProperties(this, {
+            find: {
+                value: function(cb) {
+                    const arr = [];
+                    for(const thing of this.values()) {
+                        if(cb(thing)) {
+                            arr.push(thing);
+                        }
+                    }
+                    return arr;
+                }
+            },
+            filter: {
+                value: function(cb) {
+                    const arr = [];
+                    for(const thing of this.values()) {
+                        if(cb(thing)) {
+                            arr.push(thing);
+                        }
+                    }
+                    return arr;
+                }
+            },
+            map: {
+                value: function(cb) {
+                    const arr = [];
+                    for(const thing of this.values()) {
+                        arr.push(cb(thing));
+                    }
+                    return arr;
                 }
             }
-            return arr;
-        }
-        this.find = function(cb) {
-            for(const thing of this.values()) {
-                if(cb(thing)) {
-                    return thing;
-                }
-            }
-        }
+        });
     }
 };
 
