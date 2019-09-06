@@ -6,13 +6,11 @@ class CommandContainer extends Map {
         Object.defineProperties(this, {
             find: {
                 value: function(cb) {
-                    const arr = [];
                     for(const thing of this.values()) {
                         if(cb(thing)) {
-                            arr.push(thing);
+                            return thing;
                         }
                     }
-                    return arr;
                 }
             },
             filter: {
