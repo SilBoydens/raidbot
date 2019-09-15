@@ -4,10 +4,9 @@ module.exports = {
     guildOnly: false,
     group: 'botOwner',
     async execute(client, msg, args) {
-        let code = args.join(' '), util = require('util'), codeBlock = /^```(js|javascript)(.*)```$/si;
-        if(codeBlock.test(code)) code = code.match(codeBlock)[2].trim();
+        let code = args.join(' '), util = require('util'), block = /^```(?:js|javascript)(.*)```$/si;
         try {
-            let evaled = await eval(code);
+            let evaled = await eval(block.test(code) ? code.match(block)[1].trim() : code);
             if(typeof evaled !== 'string') {
                 evaled = util.inspect(evaled).replace(/`/g, '`' + String.fromCharCode(8203));
             }
