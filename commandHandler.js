@@ -1,8 +1,8 @@
 'use strict';
 
 class CommandContainer extends Map {
-    constructor(...args) {
-        super(...args);
+    constructor(iterable) {
+        super(iterable);
         Object.defineProperties(this, {
             find: {
                 value: function(cb) {
