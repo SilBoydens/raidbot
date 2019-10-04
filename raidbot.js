@@ -71,13 +71,22 @@ client.on('message', msg => {
   if(msg.guild) {
     util.log(client, msg);
   }
-  let prefix;
-  const prefixes = [`<@${client.user.id}> `, `<@!${client.user.id}> `];
-  for(const aPrefix of prefixes) {
-    if(msg.content.startsWith(aPrefix)) prefix = msg.guild ? aPrefix : '';
-  }
+  let _prefix = new RegExp(`^(${(
+    () => {
+      let prefixes = [
+        `<@!?${client.user.id}>`,
+        'raidbot'
+      ];
+      if(!msg.guild) {
+        prefixes.push('');
+      }
+      return prefixes;
+    }
+  )().join('|')})`, 'i');
+  let prefix = msg.content.match(_prefix);
   if(msg.guild && !prefix) return;
-  const args = msg.content.slice(prefix ? prefix.length : '').trim().split(/\s+/g);
+  prefix = msg.content.match(_prefix)[1];
+  const args = msg.content.slice(prefix.length).trim().split(/\s+/g);
   const command = args.shift().toLowerCase();
   const cmd = client.commands.get(command);
 
