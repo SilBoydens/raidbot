@@ -1,79 +1,77 @@
-'use strict';
+"use strict";
 
 module.exports = {
 	guildOnly: true,
-	group: 'serverManager',
-	execute(client, msg, args) {
-		const [action, module, option, val] = args.slice(0, 4);
-		const usage = `\n\n**Usage**\n\n@${client.user.tag} list/add/remove/set module/command option value`;
-		if (!['list', 'add', 'remove', 'set'].includes(action)) {
-			msg.reply(`Invalid action name '${action}', the following are valid:\n - list\n - add\n - remove\n - set` + usage);
-			return;
+	group: "guildManager",
+	execute(ctx) {
+		const [action, mod, option, val] = ctx.args.slice(0, 4);
+		const usage = `\n\n**Usage**\n\n@${this.user.username} list/add/remove/set module/command option value`;
+		if (!["list", "add", "remove", "set"].includes(action)) {
+			return `${ctx.user.mention} Invalid action name '${action}', the following are valid:\n - list\n - add\n - remove\n - set` + usage;
 		}
-		const util = require('../util.js');
-		if (!client.config[msg.guild.id][module]) {
-			msg.reply(`Invalid module name ${module}\n` +
-				`the following modules exist:\n` +
-				` - ${Object.keys(client.config[msg.guild.id]).join('\n - ')}` + usage);
-			return;
+		let config = this.config.get(ctx.guild.id);
+		if (!config[mod]) {
+			return `${ctx.user.mention} Invalid module name ${mod}\n`
+				+ `the following modules exist:\n`
+				+ ` - ${Object.keys(config).join("\n - ")}${usage}`;
 		}
-		if (!client.config[msg.guild.id][module][option]) {
-			console.log(client.config[msg.guild.id][option]);
-			msg.reply(`Invalid option ${option} for module ${module}\n` +
-				`the following options exist for module ${module}:\n` +
-				` - ${Object.keys(client.config[msg.guild.id][module]).join('\n - ')}` + usage);
-			return;
+		if (!config[mod][option]) {
+			console.log(config[option]);
+			return `Invalid option ${option} for module ${mod}\n`
+				+ `the following options exist for module ${mod}:\n`
+				+ ` - ${Object.keys(config[mod]).join("\n - ")}${usage}`;
 		}
-		let response, value = '';
+		let response, value = "";
 		switch (action) {
-			case 'list':
-				response = `The value(s) for ${option} in module ${module} is/are:\n - `;
-				value = client.config[msg.guild.id][module][option];
-				if (Array.isArray(value)) value = value.join('\n - ');
-				msg.reply(response + value);
-				break;
-			case 'add':
-				value = client.config[msg.guild.id][module][option];
-				if (!Array.isArray(value)) {
-					msg.reply('Not a list, please use \'set\'');
-					return;
+			case "list": {
+				response = `The value(s) for ${option} in module ${mod} is/are:\n - `;
+				value = config[mod][option];
+				if (Array.isArray(value)) {
+					value = value.join("\n - ");
 				}
-				client.config[msg.guild.id][module][option].push(val.match(/\d/g).join(''));
-				response = `The the new value(s) for ${option} in module ${module} is/are:\n - `;
-				value = client.config[msg.guild.id][module][option].join('\n - ');
-				msg.reply(response + value);
-				break;
-			case 'remove':
-				value = client.config[msg.guild.id][module][option];
-				id = val.match(/\d/g).join('');
+				return `${ctx.user.mention} ${response}${value}`;
+			}
+			case "add": {
+				value = config[mod][option];
 				if (!Array.isArray(value)) {
-					msg.reply('Not a list, please use \'set\'');
-					return;
+					return `${ctx.user.mention} Not a list, please use 'set'`;
+				}
+				config[mod][option].push(val.match(/\d/g).join(""));
+				response = `The the new value(s) for ${option} in module ${mod} is/are:\n - `;
+				value = config[mod][option].join("\n - ");
+				this.config.save();
+				return `${ctx.user.mention} ${response}${value}`;
+			}
+			case "remove": {
+				value = config[mod][option];
+				id = val.match(/\d/g).join("");
+				if (!Array.isArray(value)) {
+					return `${ctx.user.mention} Not a list, please use 'set'`;
 				}
 				if (value.indexOf(id) !== -1) {
-					client.config[msg.guild.id][module][option].splice(value.indexOf(id), 1);
-					response = `The the new value(s) for ${option} in module ${module} is/are:\n - `;
+					config[mod][option].splice(value.indexOf(id), 1);
+					response = `The the new value(s) for ${option} in module ${mod} is/are:\n - `;
 				} else {
-					response = `I did not find that :cry:\nthe the value(s) for ${option} in module ${module} is/are:\n - `;
+					response = `I did not find that :cry:\nthe the value(s) for ${option} in module ${mod} is/are:\n - `;
 				}
-				value = client.config[msg.guild.id][module][option].join('\n - ');
-				msg.reply(response + value);
-				break;
-			case 'set':
-				value = client.config[msg.guild.id][module][option];
+				value = config[mod][option].join("\n - ");
+				this.config.save();
+				return `${ctx.user.mention} ${response}${value}`;
+			}
+			case "set": {
+				value = config[mod][option];
 				if (Array.isArray(value)) {
-					msg.reply('This is a list, please use \'add\' and \'remove\'');
-					return;
+					return `${ctx.user.mention} This is a list, please use 'add' and 'remove'`;
 				}
-				client.config[msg.guild.id][module][option] = val;
-				response = `The the new value for ${option} in module ${module} is: `;
-				value = client.config[msg.guild.id][module][option];
-				msg.reply(response + value);
-				break;
-			default:
-				msg.reply(`I wasn't able to understand ${action}, try using:\n- list (works for everything)\n- add (for lists)\n- remove (for lists)\n- set (not for lists)`);
-				return;
-		};
-		util.saveConfig(client);
+				config[mod][option] = val;
+				response = `The the new value for ${option} in module ${mod} is: `;
+				value = config[mod][option];
+				this.config.save();
+				return `${ctx.user.mention} ${response}${value}`;
+			}
+			default: {
+				return `${ctx.user.mention} I wasn't able to understand ${action}, try using:\n- list (works for everything)\n- add (for lists)\n- remove (for lists)\n- set (not for lists)`;
+			}
+		}
 	}
 };
