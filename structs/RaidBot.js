@@ -37,6 +37,9 @@ class RaidBot extends Eris.Client {
         });
 
         this.on("messageCreate", this.onMessageCreate);
+        this.on("guildCreate", (guild) => {
+            this.createTable(guild.id);
+        });
     }
     get createMessage() {
         return this.zombie ? function() {
