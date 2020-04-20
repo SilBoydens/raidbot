@@ -16,7 +16,6 @@ module.exports = {
                 + ` - ${Object.keys(config).join("\n - ")}${usage}`;
         }
         if (!config[mod][option]) {
-            console.log(config[option]);
             return `Invalid option ${option} for module ${mod}\n`
                 + `the following options exist for module ${mod}:\n`
                 + ` - ${Object.keys(config[mod]).join("\n - ")}${usage}`;
