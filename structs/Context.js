@@ -31,10 +31,10 @@ class Context {
             throw new Error("No command to process");
         }
         try {
-            if (!this.checkpoint) return;
             if (!this.msg.channel.guild && this.command.guildOnly) {
                 throw "Need help? send anything in here that is not a command";
             }
+            if (!this.checkpoint) return;
             let executed = await this.command.execute.call(this.#client, this);
             if (executed === null) return;
             if (typeof executed === "string") {
