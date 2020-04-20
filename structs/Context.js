@@ -81,7 +81,7 @@ class Context {
             throw new Error("No command to inspect permissions for");
         }
         switch (this.command.group) {
-            case "user": break;
+            case "user": return true;
             case "botOwner": {
                 return this.#client.config.get("owners").includes(this.user.id);
             }
