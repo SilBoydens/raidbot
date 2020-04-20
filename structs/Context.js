@@ -35,6 +35,8 @@ class Context {
                 throw "Need help? send anything in here that is not a command";
             }
             if (!this.checkpoint) return;
+        
+            this.#client.emit("commandInvoked", this);
             let executed = await this.command.execute.call(this.#client, this);
             if (executed === null) return;
             if (typeof executed === "string") {
