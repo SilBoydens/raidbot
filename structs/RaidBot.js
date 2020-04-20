@@ -33,63 +33,61 @@ class RaidBot extends Eris.Client {
         }
 
         process.on("uncaughtException", (e) => {
-          this.logger.send(e);
+            this.logger.send(e);
         });
 
         this.on("messageCreate", this.onMessageCreate);
     }
     get createMessage() {
-      return this.zombie ? function() {
-        console.log("Attempted to send a message while in zombie mode:", arguments);
-      } : super.createMessage;
+        return this.zombie ? function() {
+            console.log("Attempted to send a message while in zombie mode:", arguments);
+        } : super.createMessage;
     }
     onMessageCreate(msg) {
-      if (msg.author.bot) return;
-      if (msg.channel.guild) {
-        if (!this.#guilds.has(msg.channel.guild.id)) {
-          this.createTable(msg.channel.guild.id);
+        if (msg.author.bot) return;
+        if (msg.channel.guild) {
+            if (!this.#guilds.has(msg.channel.guild.id)) {
+                this.createTable(msg.channel.guild.id);
+            }
+            this.config.createIfNotExists(msg.channel.guild.id);
+            this.dumpMessage(msg);
         }
-        this.config.createIfNotExists(msg.channel.guild.id);
-        this.dumpMessage(msg);
-      }
-      let ctx = Context.from(msg, this);
-      if (ctx !== null) {
-        ctx.processCommand();
-      } else {
-        if (!msg.channel.guild) {
-          msg.channel.createMessage("👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md")
-          .catch(this.logger.send);
+        let ctx = Context.from(msg, this);
+        if (ctx !== null) {
+            ctx.processCommand();
+        } else {
+            if (!msg.channel.guild) {
+                msg.channel.createMessage("👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md")
+                .catch(this.logger.send);
+            }
         }
-      }
     }
-
-    // Convenient methods for handling SQLite related tasks
     dumpMessage(msg) {
-      let stmt = this.db.prepare(`INSERT INTO g${msg.channel.guild.id} VALUES (?, ?, ?, ?)`);
-      stmt.run(msg.author.id, msg.author.username, msg.content, new Date());
+        let stmt = this.db.prepare(`INSERT INTO g${msg.channel.guild.id} VALUES (?, ?, ?, ?)`);
+        stmt.run(msg.author.id, msg.author.username, msg.content, new Date());
     }
     createTable(guildID) {
-      this.#guilds.add(guildID);
-      // table names start with a g for guilds, because they can't start with a number
-      this.db.run(`CREATE TABLE IF NOT EXISTS g${guildID} (
+        this.#guilds.add(guildID);
+        // table names start with a g for guilds, because they can't start with a number
+        this.db.run(`CREATE TABLE IF NOT EXISTS g${guildID} (
         userid nchar not null,
         username nchar not null,
         message nchar not null,
-        timestamp datetime not null);`); // TODO: promisify
+        timestamp datetime not null);`);
     }
     flushDB() {
-      for (let id of this.#guilds) {
-        let stmt = this.db.prepare(`DELETE FROM g${id} WHERE timestamp < ${new Date(new Date().getTime() - (3600000)).getTime()}`);
-        stmt.run();
-      }
+        for (let id of this.#guilds) {
+            let stmt = this.db.prepare(`DELETE FROM g${id} WHERE timestamp < ${new Date(new Date().getTime() - (3600000)).getTime()}`);
+            stmt.run();
+        }
     }
     [Symbol.for("nodejs.util.inspect.custom")]() {
-      let copy = {
-          ...this
-      };
-      delete copy.token;
-      return copy;
-  }
+        let copy = {
+            ...this
+        };
+        delete copy.token;
+        return copy;
+    }
 };
 
 module.exports = RaidBot;
