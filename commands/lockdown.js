@@ -19,7 +19,7 @@ module.exports = {
             } else {
                 return `${ctx.user.mention} Server already in lockdown state.`;
             }
-        } else if (ctx.args[0] !== undefined && ctx.args[0].toLowerCase() === 'off') {
+        } else if (ctx.args[0] !== undefined && ctx.args[0].toLowerCase() === "off") {
             if (!everyone.permissions.json.sendMessages) {
                 await everyone.edit({
                     permissions: everyone.permissions.allow | 0x800
