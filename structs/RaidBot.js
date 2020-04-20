@@ -26,10 +26,7 @@ class RaidBot extends Eris.Client {
 
         for (let file of fs.readdirSync("./commands").filter(f => f.endsWith(".js"))) {
             let [name] = file.split("."), props = require(`../commands/${name}`);
-            this.commands.set(name, {
-              name,
-              ...props
-            });
+            this.commands.set(name, props);
         }
 
         process.on("uncaughtException", (e) => {
