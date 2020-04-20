@@ -4,7 +4,10 @@ const Command = require("./Command");
 
 class CommandContainer extends Map {
     set(commandName, props) {
-        return super.set(commandName, new Command(props));
+        return super.set(name, new Command({
+            name,
+            ...props
+        }));
     }
     find(func) {
         for (let value of this.values()) {
