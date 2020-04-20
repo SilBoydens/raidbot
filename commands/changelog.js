@@ -9,7 +9,7 @@ module.exports = {
             this.config.save();
             return `${ctx.user.username}, You won't receive changelogs anymore. 😦`;
         } else {
-            this.config.get("changelog")fi.push(ctx.user.id);
+            this.config.get("changelog").push(ctx.user.id);
             this.config.save();
             return `${ctx.user.username}, You will now start receiving changelogs. 🎉`;
         }
