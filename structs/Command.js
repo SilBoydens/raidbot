@@ -1,11 +1,17 @@
 "use strict";
 
 class Command {
+    name;
+    guildOnly = false;
+    group     = "user";
     constructor(props) {
-        this.name      = props.name;
-        this.guildOnly = props.guildOnly;
-        this.group     = props.group;
-
+        this.name = props.name;
+        if (props.guildOnly !== undefined) {
+            this.guildOnly = props.guildOnly;
+        }
+        if (props.group !== undefined) {
+            this.group = props.group;
+        }
         if (typeof props.execute === "function") {
             Object.defineProperty(this, "execute", {
                 value: props.execute
