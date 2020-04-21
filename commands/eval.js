@@ -3,7 +3,7 @@
 module.exports = {
     guildOnly: false,
     group: "botOwner",
-    usage: "[script]",
+    params: "[script]",
     description: "Evaluates a JavaScript expression in context of the bot",
     async execute(ctx) {
         let code = ctx.args.join(" "), util = require("util");
