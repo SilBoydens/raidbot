@@ -9,7 +9,7 @@ module.exports = {
         if (ctx.args[1] === undefined) {
             return `${ctx.user.mention} [raid] could not find enough arguments\nUsage:\n\`@${this.user.username} raid user username\`\n\`@${this.user.username} raid message messagecontent\``;
         }
-        let message = "[raid] userid list: ```";
+        let message = "[raid] userid list: ```js\n";
         let reason = `raid\n`, sql, term = ctx.args.slice(1).join(" ");
         let time = new Date(new Date().getTime() - ((this.config.get(ctx.guild.id).raid.lookback | 5) * 60 * 1000)).getTime();
 
@@ -19,7 +19,7 @@ module.exports = {
             reason = reason + `with message \`${term}\`\n`;
             sql = `SELECT userid, username FROM g${ctx.guild.id} WHERE message LIKE '${term}%' GROUP BY userid`;
         } else {
-            return `${ctx.user.mention} [raid]invalid\n either use a username or a message:\n\`@${this.user.username} raid user username\n@${this.user.username} raid message messagecontent\``;
+            return `${ctx.user.mention} [raid] invalid\n either use a username or a message:\n\`@${this.user.username} raid user username\n@${this.user.username} raid message messagecontent\``;
         }
 
         reason += ` banned by ${ctx.user.username}#${ctx.user.discriminator} using ${this.user.username} on `;
@@ -40,11 +40,7 @@ module.exports = {
                         resolve(`[raid] attempting to ban ${rows.length} users for raiding`);
                     }
                     for (let row of rows) {
-                        if (this.zombie) {
-                            console.log(`ban from ${ctx.guild.id}: ${row.userid} with reason:\n${reason}`);
-                        } else {
-                            ctx.guild.banMember(row.userid, 7, reason).catch(this.logger.send);
-                        }
+                        ctx.guild.banMember(row.userid, 7, reason).catch(this.logger.send);
                     }
                 } else {
                     resolve("[raid] nothing found");
