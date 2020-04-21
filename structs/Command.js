@@ -7,11 +7,15 @@ class Command {
     params      = "";
     description = "";
     constructor(props) {
-        this.name = props.name;
-        if (props.guildOnly !== undefined) {
+        if (typeof props.name === "string") {
+            this.name = props.name;
+        } else {
+            throw new Error("Must specify a command name as a string");
+        }
+        if (typeof props.guildOnly === "boolean") {
             this.guildOnly = props.guildOnly;
         }
-        if (props.group !== undefined) {
+        if (typeof props.group !== "string") {
             this.group = props.group;
         }
         if (typeof props.params === "string") {
@@ -24,6 +28,8 @@ class Command {
             Object.defineProperty(this, "execute", {
                 value: props.execute
             });
+        } else {
+            throw new Error("An \"execute\" method is missing or the constructor was supplied with an invalid one");
         }
     }
     get usage() {
