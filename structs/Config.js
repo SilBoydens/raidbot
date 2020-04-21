@@ -18,6 +18,9 @@ class Config {
     get(key) {
         return this.#cache[key];
     }
+    set(key, value) {
+        return this.#cache[key] = value;
+    }
     createIfNotExists(guildID) {
         if (this.#cache[guildID]) return;
         this.#cache[guildID] = Config.default;
