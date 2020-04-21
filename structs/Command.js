@@ -4,7 +4,7 @@ class Command {
     name;
     guildOnly   = false;
     group       = "user";
-    usage       = "";
+    params      = "";
     description = "";
     constructor(props) {
         this.name = props.name;
@@ -14,8 +14,8 @@ class Command {
         if (props.group !== undefined) {
             this.group = props.group;
         }
-        if (typeof props.usage === "string") {
-            this.usage = props.usage;
+        if (typeof props.params === "string") {
+            this.params = props.params;
         }
         if (typeof props.description === "string") {
             this.description = props.description;
@@ -25,6 +25,9 @@ class Command {
                 value: props.execute
             });
         }
+    }
+    get usage() {
+        return `${this.name} ${this.params}`;
     }
     toString() {
         return `[${this.constructor.name} ${this.name}]`;
