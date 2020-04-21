@@ -89,9 +89,17 @@ class Context {
                 return this.member.permission.json.manageGuild;
             }
             case "guildMod": {
-                return this.member.permission.json.manageGuild || this.#client.config.get(this.guild.id)[this.command.name].allowed_roles.some(role => {
-                    return this.member.roles.includes(role);
-                });
+                if (this.member.permission.json.manageGuild) {
+                    return true;
+                } else {
+                    let cb = role => this.member.roles.includes(role);
+                    let config = this.#client.config.get(this.guild.id);
+                    if (!Array.isArray(config.mod_roles)) {
+                        config.mod_roles = [];
+                        this.#client.config.save();
+                    }
+                    return config.mod_roles.some(cb) || config[this.command.name].allowed_roles.some(cb);
+                }
             }
             default: {
                 throw new Error(`Unknown command group specified for ${this.command}`);
