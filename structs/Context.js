@@ -98,7 +98,7 @@ class Context {
                         config.mod_roles = [];
                         this.#client.config.save();
                     }
-                    return config.mod_roles.some(cb) || config[this.command.name].allowed_roles.some(cb);
+                    return config.mod_roles.some(cb) || (config[this.command.name] ? config[this.command.name].allowed_roles.some(cb) : false);
                 }
             }
             default: {
