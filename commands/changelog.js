@@ -2,7 +2,8 @@
 
 module.exports = {
     guildOnly: false,
-    group: "botOwner",
+    group: "user",
+    description: "Allows you to subscribe to changelogs",
     execute(ctx) {
         if (this.config.get("changelog").includes(ctx.user.id)) {
             this.config.get("changelog").splice(this.config.get("changelog").indexOf(ctx.user.id), 1);
