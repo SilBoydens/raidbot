@@ -3,6 +3,8 @@
 module.exports = {
     guildOnly: true,
     group: "guildManager",
+    usage: "<\"list\"|\"add\"|\"remove\"|\"set\"> <module> <setting> [value]",
+    description: "Allows you to configure the settings for current server",
     execute(ctx) {
         const [action, mod, option, val] = ctx.args.slice(0, 4);
         const usage = `\n\n**Usage**\n\n@${this.user.username} list/add/remove/set module/command option value`;
