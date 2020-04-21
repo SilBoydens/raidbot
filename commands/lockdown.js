@@ -8,7 +8,7 @@ const img = [
 module.exports = {
     guildOnly: true,
     group: "guildMod",
-    usage: "[\"off\"]",
+    params: "[\"off\"]",
     description: "Locks the server down",
     async execute(ctx) {
         let everyone = ctx.guild.roles.get(ctx.guild.id);
