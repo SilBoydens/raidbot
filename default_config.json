@@ -2,6 +2,7 @@
   "general": {
     "sendlogs": []
   },
+  "mod_roles": [],
   "raid": {
     "lookback": "5",
     "id_list": true,
