@@ -3,7 +3,7 @@
 module.exports = {
     guildOnly: true,
     group: "guildMod",
-    usage: "<\"message\"|\"user\"> <term>",
+    params: "<\"message\"|\"user\"> <term>",
     description: "Bans raiders who meet certain criteria",
     execute(ctx) {
         if (ctx.args[1] === undefined) {
