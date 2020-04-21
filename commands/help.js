@@ -15,7 +15,7 @@ module.exports = {
             return `${ctx.user.mention} No commands to show!`;
         }
         return commands.map(c => {
-            return `**\`${c.usage ? c.name + " " + c.usage : c.name}\`**\n${c.description ? c.description : "*No description provided*"}`;
+            return `**\`${c.params ? c.usage : c.name}\`**\n${c.description ? c.description : "*No description provided*"}`;
         }).join("\n—\n");
     }
 };
