@@ -5,7 +5,7 @@ module.exports = {
     group: "guildMod",
     params: "<seconds|\"off\">",
     description: "Enables or disables slowmode in a channel",
-    async execute(ctx) {
+    execute(ctx) {
         let [seconds] = ctx.args;
         if (seconds === undefined) {
             return `${ctx.user.mention} Could not find enough arguments.\n**Usage**: \`${ctx.command.usage}\``;
