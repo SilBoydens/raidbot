@@ -11,8 +11,8 @@ module.exports = {
             return `${ctx.user.mention} Could not find enough arguments.\n**Usage**: \`${ctx.command.usage}\``;
         }
         seconds = seconds.toLowerCase() === "off" ? 0 : +seconds;
-        if (seconds < 0 || !Number.isInteger(seconds)) {
-            return `${ctx.user.mention} Invalid arguments were given.\n**Usage**: \`${ctx.command.usage}\``;
+        if (seconds < 0 || seconds > 21600 || !Number.isInteger(seconds)) {
+            return `${ctx.user.mention} Invalid timeout specified, timeout must be a number between \`0\` and \`21600\`.`;
         } else if (seconds === ctx.channel.rateLimitPerUser) {
             return seconds ? `${ctx.channel.mention} already has slowmode enabled with the specified timeout.` : `${ctx.channel.mention} does not have slowmode enabled.`;
         }
