@@ -3,7 +3,7 @@
 module.exports = {
     guildOnly: true,
     group: "guildManager",
-    usage: "<\"list\"|\"add\"|\"remove\"|\"set\"> <module> <setting> [value]",
+    params: "<\"list\"|\"add\"|\"remove\"|\"set\"> <module> <setting> [value]",
     description: "Allows you to configure the settings for current server",
     execute(ctx) {
         const [action, mod, option, val] = ctx.args.slice(0, 4);
