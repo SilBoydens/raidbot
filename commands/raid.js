@@ -3,6 +3,8 @@
 module.exports = {
     guildOnly: true,
     group: "guildMod",
+    usage: "<\"message\"|\"user\"> <term>",
+    description: "Bans raiders who meet certain criteria",
     execute(ctx) {
         if (ctx.args[1] === undefined) {
             return `${ctx.user.mention} [raid] could not find enough arguments\nUsage:\n\`@${this.user.username} raid user username\`\n\`@${this.user.username} raid message messagecontent\``;
