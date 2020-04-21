@@ -15,7 +15,7 @@ class Command {
         if (typeof props.guildOnly === "boolean") {
             this.guildOnly = props.guildOnly;
         }
-        if (typeof props.group !== "string") {
+        if (typeof props.group === "string") {
             this.group = props.group;
         }
         if (typeof props.params === "string") {
