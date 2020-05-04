@@ -45,10 +45,18 @@ class Context {
                 };
             }
             if (typeof executed.content === "string" && executed.content.length > 2000) {
-                executed.file = {
+                let file = {
                     name: "content_too_large_in_length.txt",
                     file: Buffer.from(executed.content)
                 };
+                if (executed.file !== undefined) {
+                    if (!Array.isArray(executed.file)) {
+                        executed.file = [executed.file];
+                    }
+                    executed.file.push(file);
+                } else {
+                    executed.file = file;
+                }
                 executed.content = "";
             }
             await this.channel.createMessage(executed, executed.file);
