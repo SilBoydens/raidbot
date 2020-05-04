@@ -8,9 +8,6 @@ class Context {
         this.command = command;
         this.args    = args;
     }
-    get id() {
-        return this.msg.id;
-    }
     get user() {
         return this.msg.author;
     }
@@ -31,11 +28,11 @@ class Context {
             throw new Error("No command to process");
         }
         try {
-            if (!this.msg.channel.guild && this.command.guildOnly) {
+            if (!this.guild && this.command.guildOnly) {
                 throw "Need help? send anything in here that is not a command";
             }
             if (!this.checkpoint) return;
-        
+            
             this.#client.emit("commandInvoked", this);
             let executed = await this.command.execute.call(this.#client, this);
             if (executed === null) return;
