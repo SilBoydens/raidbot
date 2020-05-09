@@ -30,14 +30,27 @@ class Logger {
             obj   = true;
         }
         entry = entry.replace(/`/g, "`" + String.fromCharCode(0x200b));
-        if (entry.length > 2000) {
-            entry = entry.substring(0, 1980) + "...";
-        }
         if (file !== undefined) {
             file = {
                 name: `${Date.now()}.${typeof file === "object" ? "json" : "txt"}`,
                 file: Buffer.from(typeof file === "object" ? JSON.stringify(file, null, "\t") : file)
             };
+        }
+        if (entry.length > 2000) {
+            let report = {
+                name: "report_content_was_too_large_in_length.txt",
+                file: Buffer.from(entry)
+            };
+            if (file !== undefined) {
+                if (!Array.isArray(file)) {
+                    file = [file];
+                }
+                file.push(report);
+            } else {
+                file = report;
+            }
+            entry = "SEE ATTACHMENT";
+            obj   = false;
         }
         this.#client.executeWebhook(this.#hook.id, this.#hook.token, {
             username: `raidbot${this.#client.ready ? "" : " (not logged in)"}`,
