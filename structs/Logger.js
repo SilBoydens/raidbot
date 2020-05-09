@@ -1,17 +1,6 @@
 "use strict";
 
-function resolveWebhook(hookURL) {
-    let match = hookURL.match(/^https:\/\/discordapp\.com\/api\/webhooks\/(\d{15,})\/(.+)$/);
-    if (match === null) {
-        throw new Error("Invalid webhook URL");
-    }
-    return {
-        id: match[1],
-        token: match[2]
-    };
-}
-
-let util = require("util");
+const util = require("util");
 
 class Logger {
     #client;
@@ -21,7 +10,14 @@ class Logger {
         this.hook    = hookURL;
     }
     set hook(hookURL) {
-        return this.#hook = resolveWebhook(hookURL);
+        let match = hookURL.match(/^https:\/\/discordapp\.com\/api\/webhooks\/(\d{15,})\/(.+)$/);
+        if (match === null) {
+            throw new Error("Invalid webhook URL");
+        }
+        return this.#hook = {
+            id: match[1],
+            token: match[2]
+        };
     }
     send(entry, file) {
         let obj = false;
