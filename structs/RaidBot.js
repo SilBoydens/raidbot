@@ -1,13 +1,13 @@
 "use strict";
 
-const Eris             = require("eris");
-const CommandContainer = require("./CommandContainer");
-const Context          = require("./Context");
-const Config           = require("./Config");
-const Logger           = require("./Logger");
-const sqlite3          = require("sqlite3").verbose();
-const fs               = require("fs");
-const path             = require("path");
+const Eris    = require("eris");
+const Command = require("./Command");
+const Config  = require("./Config");
+const Context = require("./Context");
+const Logger  = require("./Logger");
+const sqlite3 = require("sqlite3").verbose();
+const fs      = require("fs");
+const path    = require("path");
 
 class RaidBot extends Eris.Client {
     #guilds = new Set(); // list of guilds for flushDB job
@@ -16,7 +16,7 @@ class RaidBot extends Eris.Client {
 
         this.db       = new sqlite3.Database(path.join(process.cwd(), options.dbFile)); // config is kept in ram, but is writen to disk on changes
         this.config   = new Config(options.configFile);
-        this.commands = new CommandContainer();
+        this.commands = new Eris.Collection(Command);
         /**
          * in zombie mode, the bot doesn't talk or do anything at all, it only logs everything it should do to the console
          * used for development, so the bot doesn't send doubles
@@ -25,8 +25,11 @@ class RaidBot extends Eris.Client {
         this.logger = new Logger(options.logsWebhook, this);
 
         for (let file of fs.readdirSync("./commands").filter(f => f.endsWith(".js"))) {
-            let [name] = file.split("."), props = require(`../commands/${name}`);
-            this.commands.set(name, props);
+            let [id] = file.split("."), props = require(`../commands/${name}`);
+            this.commands.add({
+                id,
+                ...props
+            });
         }
 
         process.on("uncaughtException", (e) => {
