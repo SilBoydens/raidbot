@@ -6,7 +6,7 @@ module.exports = {
     execute(ctx) {
         let commands = [];
         for (let [, command] of this.commands) {
-            if (command.name === "help") continue;
+            if (command.id === "help") continue;
             if (new ctx.constructor(ctx.msg, command, [], this).checkpoint) {
                 commands.push(command);
             }
