@@ -40,6 +40,27 @@ class RaidBot extends Eris.Client {
         this.on("guildCreate", (guild) => {
             this.createTable(guild.id);
         });
+        this.on("commandInvoked", (ctx) => {
+            if (ctx.guild === null) return;
+            let config = this.config.get(ctx.guild.id);
+            if (config === undefined) {
+                this.config.createIfNotExists(ctx.guild.id);
+            }
+            if (config.general.sendlogs.length) {
+                for (let channelID of config.general.sendlogs) {
+                    let content = `${ctx.user.mention} has used the \`${ctx.command.id}\` command on ${ctx.channel.mention}`;
+                    if (ctx.args.length) {
+                        content += `\n**Arguments**: [${ctx.args.join(", ")}]`;
+                    }
+                    this.createMessage(channelID, {
+                        content,
+                        allowedMentions: {
+                            parse: []
+                        }
+                    }).catch(this.logger.send);
+                }
+            }
+        });
     }
     get createMessage() {
         return this.zombie ? function() {
