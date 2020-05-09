@@ -1,16 +1,16 @@
 "use strict";
 
 class Command {
-    name;
+    id;
     guildOnly   = false;
     group       = "user";
     params      = "";
     description = "";
     constructor(props) {
-        if (typeof props.name === "string") {
-            this.name = props.name;
+        if (typeof props.id === "string") {
+            this.id = props.id;
         } else {
-            throw new Error("Must specify a command name as a string");
+            throw new Error("Must specify a command identifier as a string");
         }
         if (typeof props.guildOnly === "boolean") {
             this.guildOnly = props.guildOnly;
@@ -33,10 +33,10 @@ class Command {
         }
     }
     get usage() {
-        return `${this.name} ${this.params}`;
+        return `${this.id} ${this.params}`;
     }
     toString() {
-        return `[${this.constructor.name} ${this.name}]`;
+        return `[${this.constructor.name} ${this.id}]`;
     }
 };
 
