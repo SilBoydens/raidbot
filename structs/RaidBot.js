@@ -25,7 +25,7 @@ class RaidBot extends Eris.Client {
         this.logger = new Logger(options.logsWebhook, this);
 
         for (let file of fs.readdirSync("./commands").filter(f => f.endsWith(".js"))) {
-            let [id] = file.split("."), props = require(`../commands/${name}`);
+            let [id] = file.split("."), props = require(`../commands/${id}`);
             this.commands.add({
                 id,
                 ...props
