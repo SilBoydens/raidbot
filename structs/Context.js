@@ -57,10 +57,8 @@ class Context {
                 executed.content = "";
             }
             await this.channel.createMessage(executed, executed.file);
-            return executed;
         } catch(e) {
             this.panic(e);
-            return e;
         }
     }
     panic(error) {
