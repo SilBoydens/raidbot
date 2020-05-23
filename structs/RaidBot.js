@@ -37,29 +37,9 @@ class RaidBot extends Eris.Client {
         });
 
         this.on("messageCreate", this.onMessageCreate);
+        this.on("commandInvoked", this.onCommandInvoked);
         this.on("guildCreate", (guild) => {
             this.createTable(guild.id);
-        });
-        this.on("commandInvoked", (ctx) => {
-            if (ctx.guild === null) return;
-            let config = this.config.get(ctx.guild.id);
-            if (config === undefined) {
-                this.config.createIfNotExists(ctx.guild.id);
-            }
-            if (config.general.sendlogs.length) {
-                for (let channelID of config.general.sendlogs) {
-                    let content = `${ctx.user.mention} has used the \`${ctx.command.id}\` command on ${ctx.channel.mention}`;
-                    if (ctx.args.length) {
-                        content += `\n**Arguments**: [${ctx.args.join(", ")}]`;
-                    }
-                    this.createMessage(channelID, {
-                        content,
-                        allowedMentions: {
-                            parse: []
-                        }
-                    }).catch(this.logger.send);
-                }
-            }
         });
     }
 
@@ -85,6 +65,32 @@ class RaidBot extends Eris.Client {
             if (!msg.channel.guild) {
                 msg.channel.createMessage("👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md")
                 .catch(this.logger.send);
+            }
+        }
+    }
+
+    onCommandInvoked(ctx) {
+        if (ctx.guild === null) return;
+        let config = this.config.get(ctx.guild.id);
+        if (config === undefined) {
+            this.config.createIfNotExists(ctx.guild.id);
+        }
+        if (config.general.sendlogs.length) {
+            for (let channelID of config.general.sendlogs) {
+                this.createMessage(channelID, {
+                    embed: {
+                        title: "Bot Command Used",
+                        description: `${ctx.user.mention} has used the \`${ctx.command.id}\` command on ${ctx.channel.mention}`,
+                        fields: [
+                            {
+                                name: "Arguments",
+                                value: ctx.args.length ? `[${ctx.args.join(", ")}]` : "None"
+                            }
+                        ],
+                        timestamp: new Date()
+                    },
+                    allowedMentions: {}
+                }).catch(this.logger.send);
             }
         }
     }
