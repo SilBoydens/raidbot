@@ -1,5 +1,7 @@
 "use strict";
 
+const assert = require("assert");
+
 class Command {
     id;
     guildOnly   = false;
@@ -7,11 +9,9 @@ class Command {
     params      = "";
     description = "";
     constructor(props) {
-        if (typeof props.id === "string") {
-            this.id = props.id;
-        } else {
-            throw new Error("Must specify a command identifier as a string");
-        }
+        assert(typeof props.id === "string", "Must specify a command identifier as a string");
+        this.id = props.id;
+        
         if (typeof props.guildOnly === "boolean") {
             this.guildOnly = props.guildOnly;
         }
@@ -24,13 +24,11 @@ class Command {
         if (typeof props.description === "string") {
             this.description = props.description;
         }
-        if (typeof props.execute === "function") {
-            Object.defineProperty(this, "execute", {
-                value: props.execute
-            });
-        } else {
-            throw new Error("An \"execute\" method is missing or the constructor was supplied with an invalid one");
-        }
+
+        assert(typeof props.execute === "function");
+        Object.defineProperty(this, "execute", {
+            value: props.execute
+        });
     }
     get usage() {
         return `${this.id} ${this.params}`;
@@ -38,6 +36,6 @@ class Command {
     toString() {
         return `[${this.constructor.name} ${this.id}]`;
     }
-};
+}
 
 module.exports = Command;
