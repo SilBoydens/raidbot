@@ -8,25 +8,28 @@ class Context {
         this.command = command;
         this.args    = args;
     }
+
     get user() {
         return this.msg.author;
     }
+
     get member() {
         return this.msg.member || null;
     }
+
     get selfMember() {
         return this.msg.channel.guild ? this.msg.channel.guild.members.get(this.#client.user.id) : null;
     }
+
     get guild() {
         return this.msg.channel.guild || null;
     }
+
     get channel() {
         return this.msg.channel;
     }
+
     async processCommand() {
-        if (this.command === undefined) {
-            throw new Error("No command to process");
-        }
         try {
             if (this.guild === null && this.command.guildOnly) {
                 throw "Need help? send anything in here that is not a command";
@@ -43,7 +46,7 @@ class Context {
             }
             if (typeof executed.content === "string" && executed.content.length > 2000) {
                 let file = {
-                    name: "content_too_large_in_length.txt",
+                    name: "message.txt",
                     file: Buffer.from(executed.content)
                 };
                 if (executed.file !== undefined) {
@@ -61,6 +64,7 @@ class Context {
             this.panic(e);
         }
     }
+
     panic(error) {
         let response = "";
         if (error instanceof Error && error.name.split(" ")[0] === "DiscordRESTError") {
@@ -81,6 +85,7 @@ class Context {
         }
         return this.channel.createMessage(response).catch(this.#client.logger.send);
     }
+
     get checkpoint() {
         if (this.command === undefined) {
             throw new Error("No command to inspect permissions for");
@@ -111,9 +116,11 @@ class Context {
             }
         }
     }
+
     toString() {
         return `[${this.constructor.name} ${this.msg.id}]`;
     }
+    
     static from(msg, self) {
         let prefix = msg.content.match(new RegExp(`^(<@!?${self.user.id}>|raidbot${msg.channel.guild ? "" : "|"})`, "i"));
         if (prefix === null) {
@@ -122,10 +129,10 @@ class Context {
 
         const args    = msg.content.slice(prefix[1].length).trim().split(/ +/);
         const command = args.shift().toLowerCase();
-        const cmd     = self.commands.get(command);
+        const cmd     = self.commands.get(command) || self.commands.find(c => c.aliases.includes(command));
 
         return cmd === undefined ? null : new Context(msg, cmd, args, self);
     }
-};
+}
 
 module.exports = Context;
