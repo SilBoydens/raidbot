@@ -7,7 +7,10 @@ require("dotenv").config();
 */
 
 const RaidBot = require("./structs/RaidBot"), client = new RaidBot(process.env.RAIDBOT_TOKEN, {
-    getAllUsers: true
+    getAllUsers: true,
+    defaultImageSize: 512,
+    defaultImageFormat: "png",
+    restMode: true
 }, {
     dbFile: process.env.DB_FILE,
     configFile: process.env.CONFIG_FILE,
