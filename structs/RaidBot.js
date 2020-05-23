@@ -64,7 +64,7 @@ class RaidBot extends Eris.Client {
     }
     get createMessage() {
         return this.zombie ? function() {
-            console.log("Attempted to send a message while in zombie mode:", arguments);
+            console.log("Attempted to send a message while in zombie mode, arguments:", [...arguments]);
         } : super.createMessage;
     }
     onMessageCreate(msg) {
@@ -112,6 +112,6 @@ class RaidBot extends Eris.Client {
         delete copy.token;
         return copy;
     }
-};
+}
 
 module.exports = RaidBot;
