@@ -21,6 +21,9 @@ class Config {
     set(key, value) {
         return this.#cache[key] = value;
     }
+    del(key) {
+        return delete this.#cache[key];
+    }
     createIfNotExists(guildID) {
         if (this.#cache[guildID]) return;
         this.#cache[guildID] = Config.default;
@@ -34,6 +37,6 @@ class Config {
     toString() {
         return `[${this.constructor.name}]`;
     }
-};
+}
 
 module.exports = Config;
