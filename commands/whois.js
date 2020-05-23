@@ -1,6 +1,6 @@
 "use strict";
 
-let fdate = ms => new Date(ms).toISOString().replace(/(?:T|Z|\.\d+)/g, " ").trim()
+let fdate = (ms) => new Date(ms).toISOString().replace(/(?:T|Z|\.\d+)/g, " ").trim();
 
 module.exports = {
     guildOnly: false,
