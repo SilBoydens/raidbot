@@ -33,7 +33,7 @@ class RaidBot extends Eris.Client {
         }
 
         process.on("uncaughtException", (e) => {
-            this.logger.send(e);
+            this.logger ? this.logger.send(e) : console.log(e);
         });
 
         this.on("messageCreate", this.onMessageCreate);
@@ -62,11 +62,13 @@ class RaidBot extends Eris.Client {
             }
         });
     }
+
     get createMessage() {
         return this.zombie ? function() {
             console.log("Attempted to send a message while in zombie mode, arguments:", [...arguments]);
         } : super.createMessage;
     }
+
     onMessageCreate(msg) {
         if (msg.author.bot) return;
         if (msg.channel.guild) {
@@ -86,10 +88,12 @@ class RaidBot extends Eris.Client {
             }
         }
     }
+
     dumpMessage(msg) {
         let stmt = this.db.prepare(`INSERT INTO g${msg.channel.guild.id} VALUES (?, ?, ?, ?)`);
         stmt.run(msg.author.id, msg.author.username, msg.content, new Date());
     }
+
     createTable(guildID) {
         this.#guilds.add(guildID);
         // table names start with a g for guilds, because they can't start with a number
@@ -99,12 +103,14 @@ class RaidBot extends Eris.Client {
         message nchar not null,
         timestamp datetime not null);`);
     }
+
     flushDB() {
         for (let id of this.#guilds) {
             let stmt = this.db.prepare(`DELETE FROM g${id} WHERE timestamp < ${new Date(new Date().getTime() - (3600000)).getTime()}`);
             stmt.run();
         }
     }
+
     [Symbol.for("nodejs.util.inspect.custom")]() {
         let copy = {
             ...this
