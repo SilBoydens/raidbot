@@ -4,6 +4,7 @@ const assert = require("assert");
 
 class Command {
     id;
+    aliases     = [];
     guildOnly   = false;
     group       = "user";
     params      = "";
@@ -11,6 +12,10 @@ class Command {
     constructor(props) {
         assert(typeof props.id === "string", "Must specify a command identifier as a string");
         this.id = props.id;
+
+        if (Array.isArray(props.aliases)) {
+            this.aliases = props.aliases;
+        }
         
         if (typeof props.guildOnly === "boolean") {
             this.guildOnly = props.guildOnly;
@@ -30,9 +35,11 @@ class Command {
             value: props.execute
         });
     }
+
     get usage() {
         return `${this.id} ${this.params}`;
     }
+    
     toString() {
         return `[${this.constructor.name} ${this.id}]`;
     }
