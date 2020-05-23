@@ -1,6 +1,7 @@
 "use strict";
 
-const util = require("util");
+const assert = require("assert");
+const util   = require("util");
 
 class Logger {
     #client;
@@ -9,32 +10,34 @@ class Logger {
         this.#client = client;
         this.hook    = hookURL;
     }
+
     set hook(hookURL) {
         let match = hookURL.match(/^https:\/\/discordapp\.com\/api\/webhooks\/(\d{15,})\/(.+)$/);
-        if (match === null) {
-            throw new Error("Invalid webhook URL");
-        }
+        assert(match !== null, "Invalid webhook URL");
         return this.#hook = {
             id: match[1],
             token: match[2]
         };
     }
+
     send(entry, file) {
-        let obj = false;
+        let entryIsStr = true;
+
         if (typeof entry !== "string") {
             entry = util.inspect(entry);
-            obj   = true;
+            entryIsStr = false;
         }
-        entry = entry.replace(/`/g, "`" + String.fromCharCode(0x200b));
+
         if (file !== undefined) {
             file = {
-                name: `${Date.now()}.${typeof file === "object" ? "json" : "txt"}`,
-                file: Buffer.from(typeof file === "object" ? JSON.stringify(file, null, "\t") : file)
+                name: `${Date.now()}.txt`,
+                file: Buffer.from(file)
             };
         }
+
         if (entry.length > 2000) {
             let report = {
-                name: "report_content_was_too_large_in_length.txt",
+                name: "report_content_too_large_in_length.txt",
                 file: Buffer.from(entry)
             };
             if (file !== undefined) {
@@ -45,27 +48,33 @@ class Logger {
             } else {
                 file = report;
             }
-            entry = "SEE ATTACHMENT";
-            obj   = false;
+            entry = "";
+            entryIsStr = true;
+        }
+
+        let avatarURL;
+        if (this.#client.ready) {
+            avatarURL = this.#client.user.avatarURL.split("?")[0];
         }
         this.#client.executeWebhook(this.#hook.id, this.#hook.token, {
+            avatarURL,
             username: `raidbot${this.#client.ready ? "" : " (not logged in)"}`,
-            ...(this.#client.ready ? {
-                avatarURL: this.#client.user.avatarURL.split("?")[0]
-            } : {}),
-            content: `\`\`\`${obj ? "js\n" : ""}${entry}\`\`\``,
-            file
+            content: entryIsStr ? entry : `\`\`\`js\n${entry}\`\`\``,
+            file,
+            allowedMentions: {}
         })
         .catch(e => {
-            console.log(`${this.constructor.name}#send failed\n${e}\nDumping to console...\n${entry}`);
+            let out = `${this.constructor.name}#send failed\n${e}\nDumping to console...\n${entry}`;
+            if (file !== undefined) {
+                out += "\n" + Array.isArray(file) ? file.map(f => f.file).join("\n") : "" + file.file;
+            }
+            console.log(out);
         });
     }
+    
     toString() {
-        return `[${this.constructor.name} ${this.#hook.id}]`;
-    }
-    [Symbol.for("nodejs.util.inspect.custom")]() {
         return `[${this.constructor.name}]`;
     }
-};
+}
 
 module.exports = Logger;
