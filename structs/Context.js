@@ -32,7 +32,7 @@ class Context {
     async processCommand() {
         try {
             if (this.guild === null && this.command.guildOnly) {
-                throw "Need help? send anything in here that is not a command";
+                return await this.channel.createMessage("Need help? send anything in here that is not a command");
             }
             if (!this.checkpoint) return;
             
@@ -87,9 +87,6 @@ class Context {
     }
 
     get checkpoint() {
-        if (this.command === undefined) {
-            throw new Error("No command to inspect permissions for");
-        }
         switch (this.command.group) {
             case "user": return true;
             case "botOwner": {
