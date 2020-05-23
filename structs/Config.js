@@ -15,25 +15,31 @@ class Config {
         this.path   = path.join(process.cwd(), filePath);
         this.#cache = require(this.path);
     }
+
     get(key) {
         return this.#cache[key];
     }
+
     set(key, value) {
         return this.#cache[key] = value;
     }
+
     del(key) {
         return delete this.#cache[key];
     }
+
     createIfNotExists(guildID) {
         if (this.#cache[guildID]) return;
         this.#cache[guildID] = Config.default;
         this.save();
     }
+
     save() {
         this.#queue.push(() => {
             fs.writeFile(this.path, JSON.stringify(this.#cache), "utf8", () => {});
         });
     }
+    
     toString() {
         return `[${this.constructor.name}]`;
     }
