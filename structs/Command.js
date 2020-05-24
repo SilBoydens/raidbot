@@ -37,7 +37,7 @@ class Command {
     }
 
     get usage() {
-        return `${this.id} ${this.params}`;
+        return this.params ? `${this.id} ${this.params}` : this.id;
     }
     
     toString() {
