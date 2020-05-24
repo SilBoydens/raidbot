@@ -40,7 +40,7 @@ module.exports = {
                         resolve(`[raid] attempting to ban ${rows.length} users for raiding`);
                     }
                     for (let row of rows) {
-                        ctx.guild.banMember(row.userid, 7, reason).catch(this.logger.send);
+                        ctx.guild.banMember(row.userid, 7, reason).catch((e) => this.logger.send(e));
                     }
                 } else {
                     resolve("[raid] nothing found");
