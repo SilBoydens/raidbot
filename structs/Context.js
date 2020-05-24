@@ -83,7 +83,7 @@ class Context {
             response = "Something went wrong. \\😢";
             this.#client.logger.send(error, JSON.stringify(this.msg.toJSON()));
         }
-        return this.channel.createMessage(response).catch(this.#client.logger.send);
+        return this.channel.createMessage(response).catch((e) => this.#client.logger.send(e));
     }
 
     get checkpoint() {
