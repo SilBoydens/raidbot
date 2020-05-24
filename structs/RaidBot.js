@@ -33,7 +33,7 @@ class RaidBot extends Eris.Client {
         }
 
         process.on("uncaughtException", (e) => {
-            this.logger ? this.logger.send(e) : console.log(e);
+            this.logger.send(e);
         });
 
         this.on("messageCreate", this.onMessageCreate);
@@ -64,7 +64,7 @@ class RaidBot extends Eris.Client {
         } else {
             if (!msg.channel.guild) {
                 msg.channel.createMessage("👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md")
-                .catch(this.logger.send);
+                .catch((e) => this.logger.send(e));
             }
         }
     }
@@ -90,7 +90,7 @@ class RaidBot extends Eris.Client {
                         timestamp: new Date()
                     },
                     allowedMentions: {}
-                }).catch(this.logger.send);
+                }).catch((e) => this.logger.send(e));
             }
         }
     }
