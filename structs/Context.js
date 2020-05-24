@@ -73,14 +73,14 @@ class Context {
             } else if (error.code === 50007) {
                 response = "Unable to send a direct message due to recipient's privacy settings.";
             } else if (error.code === 50013) {
-                response = "I don't have the required permission to perform this action."
+                response = "I don't have the required permission to perform this action.";
             } else {
                 response = `**${error.name}**: ${error.message}`;
             }
         } else if (typeof error === "string") {
             response = error;
         } else {
-            response = "Something went wrong. 😢";
+            response = "Something went wrong. \\😢";
             this.#client.logger.send(error, JSON.stringify(this.msg.toJSON()));
         }
         return this.channel.createMessage(response).catch(this.#client.logger.send);
