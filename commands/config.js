@@ -45,7 +45,7 @@ module.exports = {
             }
             case "remove": {
                 value = config[mod][option];
-                id = val.match(/\d/g).join("");
+                let id = val.match(/\d/g).join("");
                 if (!Array.isArray(value)) {
                     return `${ctx.user.mention} Not a list, please use 'set'`;
                 }
