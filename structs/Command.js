@@ -16,7 +16,6 @@ class Command {
         if (Array.isArray(props.aliases)) {
             this.aliases = props.aliases;
         }
-        
         if (typeof props.guildOnly === "boolean") {
             this.guildOnly = props.guildOnly;
         }
