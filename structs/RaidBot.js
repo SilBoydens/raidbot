@@ -41,6 +41,8 @@ class RaidBot extends Eris.Client {
         this.on("guildCreate", (guild) => {
             this.createTable(guild.id);
         });
+        // clean the sqlite db every hour
+        setInterval(this.flushDB, 3600000);
     }
 
     get createMessage() {
