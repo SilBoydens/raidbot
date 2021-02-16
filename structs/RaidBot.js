@@ -32,9 +32,7 @@ class RaidBot extends Eris.Client {
             });
         }
 
-        process.on("uncaughtException", (e) => {
-            this.logger.send(e);
-        });
+        process.on("unhandledRejection", (e) => this.logger.send(e));
 
         this.on("messageCreate", this.onMessageCreate);
         this.on("commandInvoked", this.onCommandInvoked);
