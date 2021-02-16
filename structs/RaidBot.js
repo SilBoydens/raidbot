@@ -4,10 +4,10 @@ const Eris    = require("eris");
 const Command = require("./Command");
 const Config  = require("./Config");
 const Context = require("./Context");
-const Logger  = require("./Logger");
 const sqlite3 = require("sqlite3").verbose();
 const fs      = require("fs");
 const path    = require("path");
+const util    = require("util");
 
 class RaidBot extends Eris.Client {
     #guilds = new Set(); // list of guilds for flushDB job
@@ -22,7 +22,6 @@ class RaidBot extends Eris.Client {
          * used for development, so the bot doesn't send doubles
          */
         this.zombie = process.argv.includes("zombie");
-        this.logger = new Logger(options.logsWebhook, this);
 
         for (let file of fs.readdirSync("./commands").filter(f => f.endsWith(".js"))) {
             let [id] = file.split("."), props = require(`../commands/${id}`);
@@ -32,15 +31,13 @@ class RaidBot extends Eris.Client {
             });
         }
 
-        process.on("unhandledRejection", (e) => this.logger.send(e));
+        process.on("unhandledRejection", (e) => this.createErrorLog(e));
 
         this.on("messageCreate", this.onMessageCreate);
         this.on("commandInvoked", this.onCommandInvoked);
-        this.on("guildCreate", (guild) => {
-            this.createTable(guild.id);
-        });
+        this.on("guildCreate", (guild) => this.createTable(guild.id));
         // clean the sqlite db every hour
-        setInterval(this.flushDB, 3600000);
+        this.flushDBTimer = setInterval(this.flushDB, 3600000);
     }
 
     get createMessage() {
@@ -64,7 +61,7 @@ class RaidBot extends Eris.Client {
         } else {
             if (!msg.channel.guild) {
                 msg.channel.createMessage("👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md")
-                .catch((e) => this.logger.send(e));
+                .catch((e) => this.createErrorLog(e));
             }
         }
     }
@@ -90,7 +87,7 @@ class RaidBot extends Eris.Client {
                         timestamp: new Date()
                     },
                     allowedMentions: {}
-                }).catch((e) => this.logger.send(e));
+                }).catch((e) => this.createErrorLog(e));
             }
         }
     }
@@ -110,6 +107,42 @@ class RaidBot extends Eris.Client {
         timestamp datetime not null);`);
     }
 
+    createErrorLog(entry, file) {
+        let str = true;
+        if (typeof entry !== "string") {
+            [entry, str] = [util.inspect(entry), false];
+        }
+        if (file !== undefined) {
+            file = {
+                name: `${Date.now()}.txt`,
+                file: Buffer.isBuffer(file) ? file : Buffer.from(file)
+            };
+        }
+        if (entry.length > 2E3) {
+            let report = {
+                name: "report_content_too_large_in_length.txt",
+                file: Buffer.from(entry)
+            };
+            if (file !== undefined) {
+                if (!Array.isArray(file)) file = [file];
+                file.push(report);
+            } else {
+                file = report;
+            }
+            [entry, str] = ["", true];
+        }
+        this.createMessage(process.env.LOGCHANNEL, {
+            content: str ? entry : `\`\`\`js\n${entry}\`\`\``,
+            allowedMentions: {}
+        }, file).catch((err) => {
+            let out = `${this.constructor.name}#createErrorLog failed (${err})\nDumping to console\n${entry}`;
+            if (file !== undefined) {
+                out += `\n${Array.isArray(file) ? file.map(f => f.file).join("\n") : "" + file.file}`;
+            }
+            console.error(out);
+        });
+    }
+
     flushDB() {
         for (let id of this.#guilds) {
             let stmt = this.db.prepare(`DELETE FROM g${id} WHERE timestamp < ${new Date(new Date().getTime() - (3600000)).getTime()}`);
@@ -117,7 +150,7 @@ class RaidBot extends Eris.Client {
         }
     }
 
-    [Symbol.for("nodejs.util.inspect.custom")]() {
+    [util.inspect.custom]() {
         let copy = {
             ...this
         };

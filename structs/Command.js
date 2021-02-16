@@ -1,7 +1,5 @@
 "use strict";
 
-const assert = require("assert");
-
 class Command {
     id;
     aliases     = [];
@@ -10,8 +8,15 @@ class Command {
     params      = "";
     description = "";
     constructor(props) {
-        assert(typeof props.id === "string", "Must specify a command identifier as a string");
         this.id = props.id;
+        if (typeof this.id !== "string") {
+            throw new Error("Missing a proper command identifier");
+        }
+        this.aliases     = [];
+        this.guildOnly   = false;
+        this.group       = "user";
+        this.params      = "";
+        this.description = "";
 
         if (Array.isArray(props.aliases)) {
             this.aliases = props.aliases;
@@ -28,11 +33,9 @@ class Command {
         if (typeof props.description === "string") {
             this.description = props.description;
         }
-
-        assert(typeof props.execute === "function");
-        Object.defineProperty(this, "execute", {
-            value: props.execute
-        });
+        if (typeof props.execute === "function") {
+            this.execute = props.execute;
+        }
     }
 
     get usage() {
