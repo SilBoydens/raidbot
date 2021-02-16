@@ -1,7 +1,7 @@
 "use strict";
 
 const housecall = require("housecall");
-const fs        = require("fs");
+const fs        = require("fs/promises");
 const path      = require("path");
 
 class Config {
@@ -35,9 +35,7 @@ class Config {
     }
 
     save() {
-        this.#queue.push(() => {
-            fs.writeFile(this.path, JSON.stringify(this.#cache), "utf8", () => {});
-        });
+        this.#queue.push(() => fs.writeFile(this.path, JSON.stringify(this.#cache), "utf8", () => {}));
     }
     
     toString() {
