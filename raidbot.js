@@ -10,7 +10,10 @@ const RaidBot = require("./structs/RaidBot"), client = new RaidBot(process.env.R
     getAllUsers: true,
     defaultImageSize: 512,
     defaultImageFormat: "png",
-    restMode: true
+    restMode: true,
+    intents: [
+        "guilds", "guildMessages"
+    ]
 }, {
     dbFile: process.env.DB_FILE,
     configFile: process.env.CONFIG_FILE,
