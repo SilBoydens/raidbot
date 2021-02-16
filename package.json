@@ -23,8 +23,8 @@
   "homepage": "https://github.com/SilBoydens/raidbot#readme",
   "dependencies": {
     "dotenv": "^8.2.0",
-    "eris": "^0.13.1",
+    "eris": "^0.14.0",
     "housecall": "^1.4.1",
-    "sqlite3": "^4.2.0"
+    "sqlite3": "^5.0.2"
   }
 }
