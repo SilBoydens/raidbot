@@ -93,10 +93,10 @@ class Context {
                 return this.#client.config.get("owners").includes(this.user.id);
             }
             case "guildManager": {
-                return this.member.permission.json.manageGuild;
+                return this.member.permissions.has("manageGuild");
             }
             case "guildMod": {
-                if (this.member.permission.json.manageGuild) {
+                if (this.member.permissions.has("manageGuild")) {
                     return true;
                 } else {
                     let cb = role => this.member.roles.includes(role);
