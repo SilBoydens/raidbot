@@ -184,7 +184,7 @@ class Context {
             await this.channel.createMessage(executed, executed.file);
         } catch(err) {
             let response = "";
-            if (err instanceof err instanceof Eris.DiscordRESTError) {
+            if (err instanceof Eris.DiscordRESTError) {
                 if (err.code >= 10001 && err.code <= 10036) {
                     let [, ...entity] = err.message.split(" ");
                     response = `${entity.join(" ")} not found.`;
