@@ -3,6 +3,7 @@
 const housecall = require("housecall");
 const fs        = require("fs/promises");
 const path      = require("path");
+const util      = require("util");
 
 function _createErrorLog(entry, file) {
     let str = true;
