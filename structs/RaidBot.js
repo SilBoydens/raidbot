@@ -56,6 +56,26 @@ class RaidBot extends Eris.Client {
                 stmt.run();
             }
         }, 36E5); // clean the sqlite db every hour
+
+        if (options.helpCommand) {
+            this.command({
+                id: "help",
+                guildOnly: true,
+                description: "Lists all of the available commands",
+                execute(ctx) {
+                    let commands = Object.values(this.commands).filter((command) => {
+                        if (command.id === "help") return false;
+                        return new Context(ctx.msg, command, [], this).checkpoint;
+                    });
+                    if (commands.length === 0) {
+                        return "No commands to show!";
+                    }
+                    return commands.map(c => {
+                        return `**\`${c.params ? c.usage : c.id}\`**\n${c.description ? c.description : "*No description provided*"}`;
+                    }).join("\n\n");
+                }
+            });
+        }
     }
 
     get createMessage() {
