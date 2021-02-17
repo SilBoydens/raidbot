@@ -272,9 +272,7 @@ function snowflakeToTime(id) {
 function parseDuration(str) {
     if (typeof str === "number" /* what a twist */) str = "" + str;
     let match = str.match(/^(?:(\d+)w)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/i);
-    if (match === null) {
-        throw new Error("Invalid duration");
-    }
+    if (match === null) return match;
     let [,
         weeks   = 0,
         days    = 0,
