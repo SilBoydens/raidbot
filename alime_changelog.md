@@ -7,7 +7,7 @@ Not taking technical mumbo jumbo into account. (maybe it's at least worth mentio
 - First of all, all of the current server configurations were wiped (not intentionally)
 - Fix configuration disappearing into oblivion (irrelevant to above)
 - Better command logs
-- Slowmode command (durations such `2h30m`, `1h` are accepted)
+- Slowmode command (durations such as `2h30m`, `1h` are accepted)
 - Help command that lists all the commands that are available to the command user
 - There has been a prune of servers; the bot has left servers where most of it's memberbase consisted of bots
 
