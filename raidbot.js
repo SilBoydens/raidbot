@@ -17,7 +17,8 @@ const RaidBot = require("./structs/RaidBot"), client = new RaidBot(process.env.R
     ]
 }, {
     dbFile: process.env.DB_FILE,
-    configFile: process.env.CONFIG_FILE
+    configFile: process.env.CONFIG_FILE,
+    helpCommand: true
 });
 
 client.on("ready", () => {
