@@ -2,7 +2,7 @@
 
 module.exports = {
     guildOnly: true,
-    group: "guildMod",
+    level: "guildMod",
     params: "<seconds|\"off\">",
     description: "Enables or disables slowmode in a channel",
     execute(ctx) {

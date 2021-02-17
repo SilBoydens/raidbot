@@ -5,7 +5,8 @@ module.exports = {
     description: "Lists all of the available commands",
     execute(ctx) {
         let commands = [];
-        for (let [, command] of this.commands) {
+        for (let cid in this.commands) {
+            let command = this.commands[cid];
             if (command.id === "help") continue;
             if (new ctx.constructor(ctx.msg, command, [], this).checkpoint) {
                 commands.push(command);

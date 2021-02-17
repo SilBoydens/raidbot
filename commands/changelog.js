@@ -2,7 +2,7 @@
 
 module.exports = {
     guildOnly: false,
-    group: "user",
+    level: "user",
     description: "Allows you to subscribe to changelogs",
     execute(ctx) {
         if (this.config.get("changelog").includes(ctx.user.id)) {

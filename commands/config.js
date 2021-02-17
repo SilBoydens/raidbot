@@ -2,7 +2,7 @@
 
 module.exports = {
     guildOnly: true,
-    group: "guildManager",
+    level: "guildManager",
     params: "<\"list\"|\"add\"|\"remove\"|\"set\"> <module> <setting> [value]",
     description: "Allows you to configure the settings for current server",
     execute(ctx) {
