@@ -4,6 +4,29 @@ const housecall = require("housecall");
 const fs        = require("fs/promises");
 const path      = require("path");
 
+function _onCommandInvoked(ctx) {
+    if (ctx.guild === null) return;
+    let config = this.config.get(ctx.guild.id, true);
+    if (config.general.sendlogs.length) {
+        for (let channelID of config.general.sendlogs) {
+            this.createMessage(channelID, {
+                embed: {
+                    title: "Bot Command Used",
+                    description: `${ctx.user.mention} has used the \`${ctx.command.id}\` command on ${ctx.channel.mention}`,
+                    fields: [
+                        {
+                            name: "Arguments",
+                            value: ctx.args.length ? `[${ctx.args.join(", ")}]` : "None"
+                        }
+                    ],
+                    timestamp: new Date
+                },
+                allowedMentions: {}
+            }).catch((e) => this.createErrorLog(e));
+        }
+    }
+}
+
 function _handleError(err) {
     this.createErrorLog(err);
 }
@@ -69,6 +92,7 @@ class Config {
 }
 
 module.exports = {
+    _onCommandInvoked,
     _handleError,
     _dumpMessage,
     _createTable,
