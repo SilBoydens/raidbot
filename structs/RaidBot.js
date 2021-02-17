@@ -5,7 +5,6 @@ const Context = require("./Context");
 const sqlite3 = require("sqlite3").verbose();
 const fs      = require("fs");
 const path    = require("path");
-const util    = require("util");
 const utils   = require("../utils");
 
 class RaidBot extends Eris.Client {
