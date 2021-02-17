@@ -52,7 +52,7 @@ class RaidBot extends Eris.Client {
         
         this.flushDBTimer = setInterval(() => {
             for (let id of this._guilds) {
-                let stmt = this.db.prepare(`DELETE FROM g${id} WHERE timestamp < ${new Date(new Date().getTime() - (36E5)).getTime()}`).on(_handleError);
+                let stmt = this.db.prepare(`DELETE FROM g${id} WHERE timestamp < ${new Date(new Date().getTime() - (36E5)).getTime()}`).on("error", _handleError);
                 stmt.run();
             }
         }, 36E5); // clean the sqlite db every hour
