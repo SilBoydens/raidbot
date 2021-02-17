@@ -231,10 +231,6 @@ class Context {
             }
         }
     }
-
-    toString() {
-        return `[${this.constructor.name} ${this.msg.id}]`;
-    }
 }
 
 class Command {
@@ -269,6 +265,10 @@ class Command {
     }
 }
 
+function snowflakeToTime(id) {
+    return new Eris.Base(id).createdAt;
+}
+
 module.exports = {
     deepClone,
     _createErrorLog,
@@ -278,5 +278,6 @@ module.exports = {
     _createTable,
     Config,
     Context,
-    Command
+    Command,
+    snowflakeToTime
 };
