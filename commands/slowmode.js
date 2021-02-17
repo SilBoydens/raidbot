@@ -29,8 +29,8 @@ module.exports = {
         }
         return ctx.channel.edit({
             rateLimitPerUser: seconds
-        }).then(({ rateLimitPerUser: newRL }) => {
-            return newRL > 0 ? `${channel.mention} is now on slowmode, there will be a timeout of \`${newRL.toLocaleString()}\` second${newRL > 1 ? "s" : ""} between sent messages.` : `${channel.mention} is no longer on slowmode.`;
+        }).then(({ rateLimitPerUser: newRL, mention }) => {
+            return newRL > 0 ? `${mention} is now on slowmode, there will be a timeout of \`${newRL.toLocaleString()}\` second${newRL > 1 ? "s" : ""} between sent messages.` : `${mention} is no longer on slowmode.`;
         });
     }
 };
