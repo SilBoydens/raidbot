@@ -17,7 +17,7 @@ module.exports = {
         } else {
             seconds = utils.parseDuration(seconds);
             if (seconds === null) {
-                return "Invalid duration specified, examples of acceptables durations are: `3`, `4h`, `3h30m` etc.";
+                return "Invalid duration specified, Examples of acceptables durations are: `3`, `4h`, `3h30m` etc.";
             } else {
                 seconds = seconds.total;
             }
