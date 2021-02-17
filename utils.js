@@ -5,6 +5,10 @@ const fs        = require("fs/promises");
 const path      = require("path");
 const util      = require("util");
 
+function deepClone(object) {
+    return JSON.parse(JSON.stringify(object));
+}
+
 function _createErrorLog(entry, file) {
     let str = true;
     if (typeof entry !== "string") {
@@ -99,9 +103,9 @@ class Config {
         });
     }
 
-    get(key, guild = false) {
-        if (guild && this._store[key] === undefined) {
-            this._store[key] = JSON.parse(JSON.stringify(Config.default));
+    get(key, init) {
+        if (init !== undefined && this._store[key] === undefined) {
+            this._store[key] = deepClone(init);
             this.save();
         }
         return this._store[key];
@@ -122,13 +126,10 @@ class Config {
     toString() {
         return `[${this.constructor.name}]`;
     }
-
-    static get default() {
-        return require("./default_config.json");
-    }
 }
 
 module.exports = {
+    deepClone,
     _createErrorLog,
     _onCommandInvoked,
     _handleError,
