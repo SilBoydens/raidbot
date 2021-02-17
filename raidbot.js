@@ -6,7 +6,7 @@ require("dotenv").config();
   CONFIG_FILE
 */
 
-const RaidBot = require("./structs/RaidBot"), client = new RaidBot(process.env.RAIDBOT_TOKEN, {
+const RaidBot = require("./client"), client = new RaidBot(process.env.RAIDBOT_TOKEN, {
     getAllUsers: true,
     defaultImageSize: 512,
     defaultImageFormat: "png",
