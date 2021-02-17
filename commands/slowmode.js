@@ -5,7 +5,7 @@ const utils = require("../utils");
 module.exports = {
     guildOnly: true,
     level: "guild_mod",
-    params: "<seconds|\"off\">",
+    params: "<duration|seconds|\"off\">",
     description: "Enables or disables slowmode in a channel",
     execute(ctx) {
         let [seconds] = ctx.args;
