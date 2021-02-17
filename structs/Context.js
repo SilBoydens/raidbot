@@ -1,9 +1,8 @@
 "use strict";
 
 class Context {
-    #client;
     constructor(msg, command, args, client) {
-        this.#client = client;
+        this.client  = client;
         this.msg     = msg;
         this.command = command;
         this.args    = args;
@@ -18,7 +17,7 @@ class Context {
     }
 
     get selfMember() {
-        return this.msg.channel.guild ? this.msg.channel.guild.members.get(this.#client.user.id) : null;
+        return this.msg.channel.guild ? this.msg.channel.guild.members.get(this.client.user.id) : null;
     }
 
     get guild() {
@@ -36,8 +35,8 @@ class Context {
             }
             if (!this.checkpoint) return;
             
-            this.#client.emit("commandInvoked", this);
-            let executed = await this.command.execute.call(this.#client, this);
+            this.client.emit("commandInvoked", this);
+            let executed = await this.command.execute.call(this.client, this);
             if (executed === null) return;
             if (typeof executed === "string") {
                 executed = {
@@ -60,37 +59,33 @@ class Context {
                 executed.content = "";
             }
             await this.channel.createMessage(executed, executed.file);
-        } catch(e) {
-            this.panic(e);
-        }
-    }
-
-    panic(error) {
-        let response = "";
-        if (error instanceof Error && error.name.split(" ")[0] === "DiscordRESTError") {
-            if (error.code >= 10001 && error.code <= 10036) {
-                response = `${error.message.split(" ")[1]} not found.`;
-            } else if (error.code === 50007) {
-                response = "Unable to send a direct message due to recipient's privacy settings.";
-            } else if (error.code === 50013) {
-                response = "I don't have the required permission to perform this action.";
+        } catch(err) {
+            let response = "";
+            if (err instanceof Error && err.name.split(" ")[0] === "DiscordRESTError") {
+                if (err.code >= 10001 && err.code <= 10036) {
+                    response = `${err.message.split(" ")[1]} not found.`;
+                } else if (err.code === 50007) {
+                    response = "Unable to send a direct message due to recipient's privacy settings.";
+                } else if (err.code === 50013) {
+                    response = "I don't have the required permission to perform this action.";
+                } else {
+                    response = `**${err.name}**: ${err.message}`;
+                }
+            } else if (typeof err === "string") {
+                response = err;
             } else {
-                response = `**${error.name}**: ${error.message}`;
+                response = "Something went wrong. 😢";
+                this.client.createErrorLog(err, JSON.stringify(this.msg.toJSON()));
             }
-        } else if (typeof error === "string") {
-            response = error;
-        } else {
-            response = "Something went wrong. \\😢";
-            this.#client.createErrorLog(error, JSON.stringify(this.msg.toJSON()));
+            this.channel.createMessage(response).catch((e) => this.client.createErrorLog(e));
         }
-        return this.channel.createMessage(response).catch((e) => this.#client.createErrorLog(e));
     }
 
     get checkpoint() {
-        switch (this.command.group) {
+        switch (this.command.level) {
             case "user": return true;
             case "botOwner": {
-                return this.#client.config.get("owners").includes(this.user.id);
+                return this.client.config.get("owners").includes(this.user.id);
             }
             case "guildManager": {
                 return this.member.permissions.has("manageGuild");
@@ -100,35 +95,22 @@ class Context {
                     return true;
                 } else {
                     let cb = role => this.member.roles.includes(role);
-                    let config = this.#client.config.get(this.guild.id);
+                    let config = this.client.config.get(this.guild.id);
                     if (!Array.isArray(config.mod_roles)) {
                         config.mod_roles = [];
-                        this.#client.config.save();
+                        this.client.config.save();
                     }
                     return config.mod_roles.some(cb) || (config[this.command.id] ? config[this.command.id].allowed_roles.some(cb) : false);
                 }
             }
             default: {
-                throw new Error(`Unknown command group specified for ${this.command}`);
+                throw new Error(`Unknown command level specified for ${this.command}`);
             }
         }
     }
 
     toString() {
         return `[${this.constructor.name} ${this.msg.id}]`;
-    }
-    
-    static from(msg, self) {
-        let prefix = msg.content.match(new RegExp(`^(<@!?${self.user.id}>|raidbot${msg.channel.guild ? "" : "|"})`, "i"));
-        if (prefix === null) {
-            return prefix;
-        }
-
-        const args    = msg.content.slice(prefix[1].length).trim().split(/ +/);
-        const command = args.shift().toLowerCase();
-        const cmd     = self.commands.get(command) || self.commands.find(c => c.aliases.includes(command));
-
-        return cmd === undefined ? null : new Context(msg, cmd, args, self);
     }
 }
 

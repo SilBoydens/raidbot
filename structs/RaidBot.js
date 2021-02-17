@@ -1,43 +1,46 @@
 "use strict";
 
 const Eris    = require("eris");
-const Command = require("./Command");
-const Config  = require("./Config");
 const Context = require("./Context");
 const sqlite3 = require("sqlite3").verbose();
 const fs      = require("fs");
 const path    = require("path");
 const util    = require("util");
+const utils   = require("../utils");
 
 class RaidBot extends Eris.Client {
-    #guilds = new Set(); // list of guilds for flushDB job
     constructor(token, erisOptions, options = {}) {
         super(token, erisOptions);
 
-        this.db       = new sqlite3.Database(path.join(process.cwd(), options.dbFile)); // config is kept in ram, but is writen to disk on changes
-        this.config   = new Config(options.configFile);
-        this.commands = new Eris.Collection(Command);
-        /**
-         * in zombie mode, the bot doesn't talk or do anything at all, it only logs everything it should do to the console
-         * used for development, so the bot doesn't send doubles
-         */
-        this.zombie = process.argv.includes("zombie");
+        let _handleError = utils._handleError.bind(this);
+
+        this.db = new sqlite3.Database(path.join(process.cwd(), options.dbFile)).on("error", _handleError);
+        this.config   = new utils.Config(options.configFile);
+        this.commands = {};
+        this.zombie   = process.argv.includes("zombie");
+        this._guilds  = new Set;
 
         for (let file of fs.readdirSync("./commands").filter(f => f.endsWith(".js"))) {
-            let [id] = file.split("."), props = require(`../commands/${id}`);
-            this.commands.add({
-                id,
-                ...props
-            });
+            let fpath = require.resolve(`../commands/${file}`);
+            let id = file.split(".").shift(), data = require(fpath);
+            this.command({ id, ...data });
+            delete require.cache[fpath];
         }
 
-        process.on("unhandledRejection", (e) => this.createErrorLog(e));
+        process.on("unhandledRejection", _handleError);
 
         this.on("messageCreate", this.onMessageCreate);
         this.on("commandInvoked", this.onCommandInvoked);
-        this.on("guildCreate", (guild) => this.createTable(guild.id));
-        // clean the sqlite db every hour
-        this.flushDBTimer = setInterval(this.flushDB, 3600000);
+        this.on("guildCreate", (guild) => utils._createTable.call(this, guild.id));
+        this.on("error", _handleError);
+
+        
+        this.flushDBTimer = setInterval(() => {
+            for (let id of this._guilds) {
+                let stmt = this.db.prepare(`DELETE FROM g${id} WHERE timestamp < ${new Date(new Date().getTime() - (36E5)).getTime()}`);
+                stmt.run();
+            }
+        }, 36E5); // clean the sqlite db every hour
     }
 
     get createMessage() {
@@ -48,14 +51,12 @@ class RaidBot extends Eris.Client {
 
     onMessageCreate(msg) {
         if (msg.author.bot) return;
-        if (msg.channel.guild) {
-            if (!this.#guilds.has(msg.channel.guild.id)) {
-                this.createTable(msg.channel.guild.id);
-            }
-            this.config.createIfNotExists(msg.channel.guild.id);
-            this.dumpMessage(msg);
+        if (msg.channel.guild !== undefined) {
+            utils._createTable.call(this, msg.channel.guild.id);
+            this.config.get(msg.channel.guild.id, true);
+            utils._dumpMessage.call(this, msg);
         }
-        let ctx = Context.from(msg, this);
+        let ctx = this.contextify(msg);
         if (ctx !== null) {
             ctx.processCommand();
         } else {
@@ -68,10 +69,7 @@ class RaidBot extends Eris.Client {
 
     onCommandInvoked(ctx) {
         if (ctx.guild === null) return;
-        let config = this.config.get(ctx.guild.id);
-        if (config === undefined) {
-            this.config.createIfNotExists(ctx.guild.id);
-        }
+        let config = this.config.get(ctx.guild.id, true);
         if (config.general.sendlogs.length) {
             for (let channelID of config.general.sendlogs) {
                 this.createMessage(channelID, {
@@ -90,21 +88,6 @@ class RaidBot extends Eris.Client {
                 }).catch((e) => this.createErrorLog(e));
             }
         }
-    }
-
-    dumpMessage(msg) {
-        let stmt = this.db.prepare(`INSERT INTO g${msg.channel.guild.id} VALUES (?, ?, ?, ?)`);
-        stmt.run(msg.author.id, msg.author.username, msg.content, new Date());
-    }
-
-    createTable(guildID) {
-        this.#guilds.add(guildID);
-        // table names start with a g for guilds, because they can't start with a number
-        this.db.run(`CREATE TABLE IF NOT EXISTS g${guildID} (
-        userid nchar not null,
-        username nchar not null,
-        message nchar not null,
-        timestamp datetime not null);`);
     }
 
     createErrorLog(entry, file) {
@@ -143,19 +126,49 @@ class RaidBot extends Eris.Client {
         });
     }
 
-    flushDB() {
-        for (let id of this.#guilds) {
-            let stmt = this.db.prepare(`DELETE FROM g${id} WHERE timestamp < ${new Date(new Date().getTime() - (3600000)).getTime()}`);
-            stmt.run();
+    contextify(msg) {
+        let prefix = msg.content.match(new RegExp(`^(<@!?${this.user.id}>|${msg.channel.guild ? "" : "|"})`));
+        if (prefix === null) {
+            return prefix;
         }
+
+        const args    = msg.content.slice(prefix[1].length).trim().split(/ +/);
+        const command = args.shift().toLowerCase();
+        const cmd     = this.commands[command];
+
+        return cmd === undefined ? null : new Context(msg, cmd, args, this);
     }
 
-    [util.inspect.custom]() {
-        let copy = {
-            ...this
+    command(data) {
+        let cmd = {
+            id: data.id,
+            guildOnly: false,
+            level: "user",
+            params: "",
+            description: "",
+            get usage() {
+                return this.params ? `${this.id} ${this.params}` : this.id;
+            }
         };
-        delete copy.token;
-        return copy;
+        if (typeof cmd.id !== "string") {
+            throw new Error("Missing a proper command identifier");
+        }
+        if (typeof data.guildOnly === "boolean") {
+            cmd.guildOnly = data.guildOnly;
+        }
+        if (typeof data.level === "string") {
+            cmd.level = data.level;
+        }
+        if (typeof data.params === "string") {
+            cmd.params = data.params;
+        }
+        if (typeof data.description === "string") {
+            cmd.description = data.description;
+        }
+        if (typeof data.execute === "function") {
+            cmd.execute = data.execute;
+        }
+        return this.commands[cmd.id] = cmd;
     }
 }
 
