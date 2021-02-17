@@ -4,6 +4,7 @@ const housecall = require("housecall");
 const fs        = require("fs/promises");
 const path      = require("path");
 const util      = require("util");
+const Eris      = require("eris");
 
 function deepClone(object) {
     return JSON.parse(JSON.stringify(object));
@@ -128,6 +129,146 @@ class Config {
     }
 }
 
+class Context {
+    constructor(msg, command, args, client) {
+        this.client  = client;
+        this.msg     = msg;
+        this.command = command;
+        this.args    = args;
+        this.user    = msg.author;
+        this.channel = msg.channel;
+    }
+
+    get member() {
+        return this.msg.member || null;
+    }
+
+    get selfMember() {
+        return this.msg.channel.guild?.members.get(this.client.user.id) ?? null;
+    }
+
+    get guild() {
+        return this.msg.channel.guild ?? null;
+    }
+
+    async processCommand() {
+        try {
+            if (this.guild === null && this.command.guildOnly) {
+                return await this.channel.createMessage("Need help? send anything in here that is not a command");
+            }
+            if (!this.checkpoint) return;
+            
+            this.client.emit("commandInvoked", this);
+            let executed = await this.command.execute.call(this.client, this);
+            if (executed === null) return;
+            if (typeof executed === "string") {
+                executed = {
+                    content: executed
+                };
+            }
+            if (typeof executed.content === "string" && executed.content.length > 2000) {
+                let file = {
+                    name: "message.txt",
+                    file: Buffer.from(executed.content)
+                };
+                if (executed.file !== undefined) {
+                    if (!Array.isArray(executed.file)) {
+                        executed.file = [executed.file];
+                    }
+                    executed.file.push(file);
+                } else {
+                    executed.file = file;
+                }
+                executed.content = "";
+            }
+            await this.channel.createMessage(executed, executed.file);
+        } catch(err) {
+            let response = "";
+            if (err instanceof err instanceof Eris.DiscordRESTError) {
+                if (err.code >= 10001 && err.code <= 10036) {
+                    let [, ...entity] = err.message.split(" ");
+                    response = `${entity.join(" ")} not found.`;
+                } else if (err.code === 50007) {
+                    response = "Unable to send a direct message due to recipient's privacy settings.";
+                } else if (err.code === 50013) {
+                    response = "I don't have the required permission to perform this action.";
+                } else {
+                    response = `**${err.name}**: ${err.message}`;
+                }
+            } else if (typeof err === "string") {
+                response = err;
+            } else {
+                response = "Something went wrong. 😢";
+                this.client.createErrorLog(err, JSON.stringify(this.msg.toJSON()));
+            }
+            this.channel.createMessage(response).catch((e) => this.client.createErrorLog(e));
+        }
+    }
+
+    get checkpoint() {
+        switch (this.command.level) {
+            case "user": return true;
+            case "bot_owner": {
+                return this.client.config.get("owners").includes(this.user.id);
+            }
+            case "guild_manager": {
+                return this.member.permissions.has("manageGuild");
+            }
+            case "guild_mod": {
+                if (this.member.permissions.has("manageGuild")) {
+                    return true;
+                } else {
+                    let cb = (rid) => this.member.roles.includes(rid), config = this.client.config.get(this.guild.id);
+                    if (!Array.isArray(config.mod_roles)) {
+                        config.mod_roles = [];
+                        this.client.config.save();
+                    }
+                    return config.mod_roles.some(cb) || (config[this.command.id] ? config[this.command.id].allowed_roles.some(cb) : false);
+                }
+            }
+            default: {
+                throw new Error(`Unknown command level specified for ${this.command}`);
+            }
+        }
+    }
+
+    toString() {
+        return `[${this.constructor.name} ${this.msg.id}]`;
+    }
+}
+
+class Command {
+    constructor(data) {
+        this.id          = data.id;
+        this.guildOnly   = false;
+        this.level       = "user";
+        this.params      = "";
+        this.description = "";
+        if (typeof this.id !== "string") {
+            throw new Error("Missing a proper command identifier");
+        }
+        if (typeof data.guildOnly === "boolean") {
+            this.guildOnly = data.guildOnly;
+        }
+        if (typeof data.level === "string") {
+            this.level = data.level;
+        }
+        if (typeof data.params === "string") {
+            this.params = data.params;
+        }
+        if (typeof data.description === "string") {
+            this.description = data.description;
+        }
+        if (typeof data.execute === "function") {
+            this.execute = data.execute;
+        }
+    }
+
+    get usage() {
+        return this.params ? `${this.id} ${this.params}` : this.id;
+    }
+}
+
 module.exports = {
     deepClone,
     _createErrorLog,
@@ -135,5 +276,7 @@ module.exports = {
     _handleError,
     _dumpMessage,
     _createTable,
-    Config
+    Config,
+    Context,
+    Command
 };
