@@ -269,6 +269,35 @@ function snowflakeToTime(id) {
     return new Eris.Base(id).createdAt;
 }
 
+function parseDuration(str) {
+    if (typeof str === "number" /* what a twist */) str = "" + str;
+    let match = str.match(/^(?:(\d+)w)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/i);
+    if (match === null) {
+        throw new Error("Invalid duration");
+    }
+    let [,
+        weeks   = 0,
+        days    = 0,
+        hours   = 0,
+        minutes = 0,
+        seconds = 0
+    ] = match;
+    return {
+        weeks  : +weeks,
+        days   : +days,
+        hours  : +hours,
+        minutes: +minutes,
+        seconds: +seconds,
+        get total() {
+            return this.weeks   * 6048E2
+            +      this.days    * 864E2
+            +      this.hours   * 36E2
+            +      this.minutes * 60
+            +      this.seconds;
+        }
+    };
+}
+
 module.exports = {
     deepClone,
     _createErrorLog,
@@ -279,5 +308,6 @@ module.exports = {
     Config,
     Context,
     Command,
-    snowflakeToTime
+    snowflakeToTime,
+    parseDuration
 };
