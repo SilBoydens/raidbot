@@ -11,6 +11,7 @@ const utils   = require("../utils");
 class RaidBot extends Eris.Client {
     constructor(token, erisOptions, options = {}) {
         super(token, erisOptions);
+        this.createErrorLog = utils._createErrorLog.bind(this);
 
         let _handleError = utils._handleError.bind(this);
 
@@ -49,7 +50,6 @@ class RaidBot extends Eris.Client {
         this.on("commandInvoked", utils._onCommandInvoked.bind(this));
         this.on("guildCreate", (guild) => utils._createTable.call(this, guild.id));
         this.on("error", _handleError);
-
         
         this.flushDBTimer = setInterval(() => {
             for (let id of this._guilds) {
@@ -63,42 +63,6 @@ class RaidBot extends Eris.Client {
         return this.zombie ? function() {
             console.log("Attempted to send a message while in zombie mode, arguments:", [...arguments]);
         } : super.createMessage;
-    }
-
-    createErrorLog(entry, file) {
-        let str = true;
-        if (typeof entry !== "string") {
-            [entry, str] = [util.inspect(entry), false];
-        }
-        if (file !== undefined) {
-            file = {
-                name: `${Date.now()}.txt`,
-                file: Buffer.isBuffer(file) ? file : Buffer.from(file)
-            };
-        }
-        if (entry.length > 2E3) {
-            let report = {
-                name: "report_content_too_large_in_length.txt",
-                file: Buffer.from(entry)
-            };
-            if (file !== undefined) {
-                if (!Array.isArray(file)) file = [file];
-                file.push(report);
-            } else {
-                file = report;
-            }
-            [entry, str] = ["", true];
-        }
-        this.createMessage(process.env.LOGCHANNEL, {
-            content: str ? entry : `\`\`\`js\n${entry}\`\`\``,
-            allowedMentions: {}
-        }, file).catch((err) => {
-            let out = `${this.constructor.name}#createErrorLog failed (${err})\nDumping to console\n${entry}`;
-            if (file !== undefined) {
-                out += `\n${Array.isArray(file) ? file.map(f => f.file).join("\n") : "" + file.file}`;
-            }
-            console.error(out);
-        });
     }
 
     contextify(msg) {
