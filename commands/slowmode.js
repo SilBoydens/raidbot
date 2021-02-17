@@ -23,9 +23,9 @@ module.exports = {
             }
         }
         if (seconds > 216E2) {
-            return "Invalid timeout specified, timeout must be a number between \`0\` and \`21600\`.";
+            return "Slowmode timeout cannot go beyond 6 hours.";
         } else if (seconds === ctx.channel.rateLimitPerUser) {
-            return seconds ? `${ctx.channel.mention} already has slowmode enabled with the specified timeout.` : `${ctx.channel.mention} does not have slowmode enabled.`;
+            return seconds > 0 ? `${ctx.channel.mention} already has slowmode enabled with the specified timeout.` : `${ctx.channel.mention} does not have slowmode enabled.`;
         }
         return ctx.channel.edit({
             rateLimitPerUser: seconds
