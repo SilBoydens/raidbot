@@ -33,7 +33,7 @@ class RaidBot extends Eris.Client {
             if (msg.author.bot) return;
             if (msg.channel.guild !== undefined) {
                 utils._createTable.call(this, msg.channel.guild.id);
-                this.config.get(msg.channel.guild.id, true);
+                this.config.get(msg.channel.guild.id, require("../default_config.json"));
                 utils._dumpMessage.call(this, msg);
             }
             let ctx = this.contextify(msg);
