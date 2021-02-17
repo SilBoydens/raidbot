@@ -14,7 +14,7 @@ class RaidBot extends Eris.Client {
 
         let _handleError = utils._handleError.bind(this);
 
-        this.db = new sqlite3.Database(path.join(process.cwd(), options.dbFile)).on("error", _handleError);
+        this.db       = new sqlite3.Database(path.join(process.cwd(), options.dbFile)).on("error", _handleError);
         this.config   = new utils.Config(options.configFile);
         this.commands = {};
         this.zombie   = process.argv.includes("zombie");
@@ -29,8 +29,24 @@ class RaidBot extends Eris.Client {
 
         process.on("unhandledRejection", _handleError);
 
-        this.on("messageCreate", this.onMessageCreate);
-        this.on("commandInvoked", this.onCommandInvoked);
+        this.on("messageCreate", (msg) => {
+            if (msg.author.bot) return;
+            if (msg.channel.guild !== undefined) {
+                utils._createTable.call(this, msg.channel.guild.id);
+                this.config.get(msg.channel.guild.id, true);
+                utils._dumpMessage.call(this, msg);
+            }
+            let ctx = this.contextify(msg);
+            if (ctx !== null) {
+                ctx.processCommand();
+            } else {
+                if (!msg.channel.guild) {
+                    msg.channel.createMessage("👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md")
+                    .catch(_handleError);
+                }
+            }
+        });
+        this.on("commandInvoked", utils._onCommandInvoked.bind(this));
         this.on("guildCreate", (guild) => utils._createTable.call(this, guild.id));
         this.on("error", _handleError);
 
@@ -47,47 +63,6 @@ class RaidBot extends Eris.Client {
         return this.zombie ? function() {
             console.log("Attempted to send a message while in zombie mode, arguments:", [...arguments]);
         } : super.createMessage;
-    }
-
-    onMessageCreate(msg) {
-        if (msg.author.bot) return;
-        if (msg.channel.guild !== undefined) {
-            utils._createTable.call(this, msg.channel.guild.id);
-            this.config.get(msg.channel.guild.id, true);
-            utils._dumpMessage.call(this, msg);
-        }
-        let ctx = this.contextify(msg);
-        if (ctx !== null) {
-            ctx.processCommand();
-        } else {
-            if (!msg.channel.guild) {
-                msg.channel.createMessage("👀 You seem to be needing some help\nhttps://github.com/SilBoydens/raidbot/blob/master/readme.md")
-                .catch((e) => this.createErrorLog(e));
-            }
-        }
-    }
-
-    onCommandInvoked(ctx) {
-        if (ctx.guild === null) return;
-        let config = this.config.get(ctx.guild.id, true);
-        if (config.general.sendlogs.length) {
-            for (let channelID of config.general.sendlogs) {
-                this.createMessage(channelID, {
-                    embed: {
-                        title: "Bot Command Used",
-                        description: `${ctx.user.mention} has used the \`${ctx.command.id}\` command on ${ctx.channel.mention}`,
-                        fields: [
-                            {
-                                name: "Arguments",
-                                value: ctx.args.length ? `[${ctx.args.join(", ")}]` : "None"
-                            }
-                        ],
-                        timestamp: new Date()
-                    },
-                    allowedMentions: {}
-                }).catch((e) => this.createErrorLog(e));
-            }
-        }
     }
 
     createErrorLog(entry, file) {
