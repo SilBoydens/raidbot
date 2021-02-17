@@ -84,18 +84,17 @@ class Context {
     get checkpoint() {
         switch (this.command.level) {
             case "user": return true;
-            case "botOwner": {
+            case "bot_owner": {
                 return this.client.config.get("owners").includes(this.user.id);
             }
-            case "guildManager": {
+            case "guild_manager": {
                 return this.member.permissions.has("manageGuild");
             }
-            case "guildMod": {
+            case "guild_mod": {
                 if (this.member.permissions.has("manageGuild")) {
                     return true;
                 } else {
-                    let cb = role => this.member.roles.includes(role);
-                    let config = this.client.config.get(this.guild.id);
+                    let cb = (rid) => this.member.roles.includes(rid), config = this.client.config.get(this.guild.id);
                     if (!Array.isArray(config.mod_roles)) {
                         config.mod_roles = [];
                         this.client.config.save();
