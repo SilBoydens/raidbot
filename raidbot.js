@@ -11,12 +11,11 @@ const RaidBot = require("./structs/RaidBot"), client = new RaidBot(process.env.R
     defaultImageFormat: "png",
     restMode: true,
     intents: [
-        "guilds", "guildMessages"
+        "guilds", "guildMessages", "directMessages"
     ]
 }, {
     dbFile: process.env.DB_FILE,
-    configFile: process.env.CONFIG_FILE,
-    logsWebhook: process.env.LOGS_WEBHOOK
+    configFile: process.env.CONFIG_FILE
 });
 
 client.on("ready", () => {
