@@ -1,8 +1,6 @@
 "use strict";
 
 module.exports = {
-    guildOnly: false,
-    level: "user",
     description: "Allows you to subscribe to changelogs",
     execute(ctx) {
         if (this.config.get("changelog").includes(ctx.user.id)) {

@@ -7,7 +7,7 @@ const img = [
 
 module.exports = {
     guildOnly: true,
-    level: "guildMod",
+    level: "guild_mod",
     params: "[\"off\"]",
     description: "Locks the server down",
     async execute(ctx) {
