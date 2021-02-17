@@ -4,6 +4,42 @@ const housecall = require("housecall");
 const fs        = require("fs/promises");
 const path      = require("path");
 
+function _createErrorLog(entry, file) {
+    let str = true;
+    if (typeof entry !== "string") {
+        [entry, str] = [util.inspect(entry), false];
+    }
+    if (file !== undefined) {
+        file = {
+            name: `${Date.now()}.txt`,
+            file: Buffer.isBuffer(file) ? file : Buffer.from(file)
+        };
+    }
+    if (entry.length > 2E3) {
+        let report = {
+            name: "report_content_too_large_in_length.txt",
+            file: Buffer.from(entry)
+        };
+        if (file !== undefined) {
+            if (!Array.isArray(file)) file = [file];
+            file.push(report);
+        } else {
+            file = report;
+        }
+        [entry, str] = ["", true];
+    }
+    this.createMessage(process.env.LOGCHANNEL, {
+        content: str ? entry : `\`\`\`js\n${entry}\`\`\``,
+        allowedMentions: {}
+    }, file).catch((err) => {
+        let out = `${this.constructor.name}#createErrorLog failed (${err})\nDumping to console\n${entry}`;
+        if (file !== undefined) {
+            out += `\n${Array.isArray(file) ? file.map(f => f.file).join("\n") : "" + file.file}`;
+        }
+        console.error(out);
+    });
+}
+
 function _onCommandInvoked(ctx) {
     if (ctx.guild === null) return;
     let config = this.config.get(ctx.guild.id, true);
@@ -92,6 +128,7 @@ class Config {
 }
 
 module.exports = {
+    _createErrorLog,
     _onCommandInvoked,
     _handleError,
     _dumpMessage,
