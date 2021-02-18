@@ -62,8 +62,7 @@ function _onCommandInvoked(ctx) {
                         }
                     ],
                     timestamp: new Date
-                },
-                allowedMentions: {}
+                }
             }).catch((e) => this.createErrorLog(e));
         }
     }
