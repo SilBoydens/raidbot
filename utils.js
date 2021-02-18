@@ -58,7 +58,7 @@ function _onCommandInvoked(ctx) {
                     fields: [
                         {
                             name: "Arguments",
-                            value: ctx.args.length ? `[${ctx.args.join(", ")}]` : "None"
+                            value: ctx.args.length > 0 ? `[${ctx.args.join(" ")}]` : "None"
                         }
                     ],
                     timestamp: new Date
