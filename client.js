@@ -84,7 +84,7 @@ class RaidBot extends Eris.Client {
     }
 
     contextify(msg, withCommand) {
-        let prefix = msg.content.match(new RegExp(`^(<@!?${this.user.id}>|${msg.channel.guild ? "" : "|"})`));
+        let prefix = msg.content.match(new RegExp(`^(<@!?${this.user.id}>${msg.channel.guild ? "" : "|"})`));
         if (prefix === null) {
             return prefix;
         }
