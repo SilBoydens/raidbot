@@ -1,6 +1,6 @@
 This bot helps moderators to stop and clean up raids. it does NOT prevent raid or stop raids itself, it always needs to be triggered by a moderator.
 
-[Click here to invite the bot](<https://discordapp.com/oauth2/authorize?client_id=528531827246366760&permissions=268435460&scope=bot>)
+[Click here to invite the bot](<https://discordapp.com/oauth2/authorize?client_id=528531827246366760&permissions=268435460&scope=bot>) \
 [Help keep this bot online](<https://www.paypal.me/silboydens>) (with `raidbot` anywhere in the description)
 
 I'm `@Sil#5262` on Discord and I can usually be found in the [MEE6 bot support server](<https://discord.gg/mee6>).
