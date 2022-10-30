@@ -14,7 +14,7 @@ By default only those with `Manage Server` permission can use the commands (an e
 `/raid message <insert message here>`  
 `/raid user <insert username here>`  
 
-Will ban all users who talked in the last 5 minutes (configurable) with a message/username that starts with <insert xxx here>.
+Will ban all users who talked in the last 5 minutes (configurable) with a message/username that starts with \<insert xxx here\>.
 
 ## /lockdown
 
