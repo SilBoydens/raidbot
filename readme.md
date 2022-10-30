@@ -31,7 +31,7 @@ Enables or disables lockdown, you need to have `@everyone` in roles set to allow
 
 ## Setup
 
-run the commands:
+Run the commands:
 ```bash
 git clone git@github.com:SilBoydens/raidbot.git
 cd raidbot
@@ -72,10 +72,10 @@ and now you have a ramdisk at `/ram`.
 
 # TODO
 
-- [x] add more to readme
+- [x] Add more to readme
 
-- [x] config input validation
+- [x] Config input validation
 
-- [x] split in even more files
+- [x] Split in even more files
 
-- [ ] website for config? (maybe)
+- [ ] Website for config? (maybe)
