@@ -1,37 +1,41 @@
 "use strict";
 
-const img = [
-    "https://zippy.gfycat.com/CarelessSplendidKiskadee.webm",
-    "https://i.gifer.com/7DUg.mp4"
+const Eris = require("eris");
+const lockdownImages = [
+    "https://zippy.gfycat.com/CarelessSplendidKiskadee.gif",
+    "https://i.gifer.com/7DUg.gif"
 ];
 
 module.exports = {
-    guildOnly: true,
-    level: "guild_mod",
-    params: "[\"off\"]",
-    description: "Locks the server down",
     async execute(ctx) {
         let everyone = ctx.guild.roles.get(ctx.guild.id);
-        if (!ctx.args[0]) {
-            if (everyone.permissions.json.sendMessages) {
-                await everyone.edit({
-                    permissions: everyone.permissions.allow & ~0x800
-                });
-                return `${ctx.user.mention} Server locked down.\n${img[Math.floor(Math.random()*img.length)]}`;
-            } else {
-                return `${ctx.user.mention} Server already in lockdown state.`;
-            }
-        } else if (ctx.args[0] !== undefined && ctx.args[0].toLowerCase() === "off") {
-            if (!everyone.permissions.json.sendMessages) {
-                await everyone.edit({
-                    permissions: everyone.permissions.allow | 0x800
-                });
-                return `${ctx.user.mention} Unlocked the server.`;
-            } else {
-                return `${ctx.user.mention} Server is not locked.`;
-            }
+        if (ctx.interaction.data.options[0].name === "on") {
+            if (!everyone.permissions.has("sendMessages")) return "Server already in lockdown state.";
+            await everyone.edit({
+                permissions: everyone.permissions.allow & ~Eris.Constants.Permissions.sendMessages
+            });
+            return `Server locked down.\n${lockdownImages[Math.floor(Math.random() * lockdownImages.length)]}`;
         } else {
-            return `${ctx.user.mention} [lockdown] could not understand "${ctx.args[0]}"\nUsage:\n\`@${this.user.username} lockdown\` locks the server down\n\`@${this.user.username} lockdown off\` unlocks the server`;
+            if (everyone.permissions.has("sendMessages")) return "Server is not locked.";
+            await everyone.edit({
+                permissions: everyone.permissions.allow | Eris.Constants.Permissions.sendMessages
+            });
+            return "Unlocked the server.";
         }
-    }
+    },
+    description: "Locks the server down",
+    options: [
+        {
+            type: Eris.Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+            name: "on",
+            description: "Locks the server down"
+        },
+        {
+            type: Eris.Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+            name: "off",
+            description: "Unlocks the server"
+        }
+    ],
+    default_member_permissions: Eris.Constants.Permissions.manageGuild,
+    dm_permission: false
 };
