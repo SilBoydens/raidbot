@@ -6,30 +6,15 @@ require("dotenv").config();
   CONFIG_FILE
 */
 
-const RaidBot = require("./client"), client = new RaidBot(process.env.RAIDBOT_TOKEN, {
+const RaidBot = require("./structures/client");
+const client = new RaidBot(`Bot ${process.env.RAIDBOT_TOKEN}`, {
     getAllUsers: true,
-    defaultImageSize: 512,
-    defaultImageFormat: "png",
-    restMode: true,
-    intents: [
-        "guilds", "guildMembers", "guildMessages",
-        "directMessages"
-    ]
-}, {
-    dbFile: process.env.DB_FILE,
-    configFile: process.env.CONFIG_FILE,
-    helpCommand: true
+    intents: ["guilds", "guildMembers", "guildMessages"]
 });
 
 client.on("ready", () => {
-    console.log("Logged in as %s#%s!", client.user.username, client.user.discriminator);
-    console.log("Serving %d guilds:", client.guilds.size);
-
-    for (let [, guild] of client.guilds) {
-        console.log("* %s", guild.name);
-    }
-    
-    client.editStatus(void(0), {
+    console.log("Logged in as %s#%s, serving %d guilds", client.user.username, client.user.discriminator, client.guilds.size);
+    client.editStatus(undefined, {
         name: "Helping moderators"
     });
 });
